@@ -1,4 +1,9 @@
-import { Tabs } from 'expo-router';
+import { Stack } from 'expo-router';
+
+export default function RootLayout() {
+  return <Stack screenOptions={{ headerShown: false }} />;
+}
+/*
 import React from 'react';
 
 import { HapticTab } from '@/components/haptic-tab';
@@ -33,3 +38,4 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+*/
