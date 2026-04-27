@@ -5,7 +5,10 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "halorsa",
+    "scheme": [
+      "halorsa",
+      "com.googleusercontent.apps.656827986979-102opc80tg1958j8budbc0t6ca0m6sgf"
+    ],
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {

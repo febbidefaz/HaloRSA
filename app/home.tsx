@@ -2,6 +2,8 @@ import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-ico
 import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import React, { useEffect, useState } from 'react';
+import { BlurView } from 'expo-blur';
+import { ImageBackground } from 'react-native';
 import {
   Dimensions,
   Image,
@@ -20,61 +22,68 @@ const menuItems = [
   {
     title: 'Pendaftaran',
     bgColor: '#FFA94D',
-    icon: <FontAwesome5 name="notes-medical" size={28} color="#fff" />,
+    image: require('../assets/menu/daftar.png'),
+   // icon: <FontAwesome5 name="notes-medical" size={28} color="#fff" />,
   },
   {
     title: 'Riwayat\npendaftaran',
     bgColor: '#39D0C3',
-    icon: <Ionicons name="calendar-outline" size={28} color="#fff" />,
+    image: require('../assets/menu/riwayat.png'),
+   // icon: <Ionicons name="calendar-outline" size={28} color="#fff" />,
   },
   {
     title: 'Status\nAntrian',
     bgColor: '#F3D75B',
-    icon: <MaterialCommunityIcons name="clipboard-list-outline" size={28} color="#fff" />,
+    image: require('../assets/menu/antrian.png'),
+   // icon: <MaterialCommunityIcons name="clipboard-list-outline" size={28} color="#fff" />,
   },
   {
     title: 'Konsultasi\nDokter',
     bgColor: '#5DA9FF',
-    icon: <FontAwesome5 name="user-md" size={26} color="#fff" />,
+    image: require('../assets/menu/konsul.png'),
+   // icon: <FontAwesome5 name="user-md" size={26} color="#fff" />,
   },
   {
     title: 'Kritik dan\nSaran',
     bgColor: '#5D8FEF',
-    icon: <MaterialCommunityIcons name="message-text-outline" size={28} color="#fff" />,
+    image: require('../assets/menu/kritik.png'),
+   // icon: <MaterialCommunityIcons name="message-text-outline" size={28} color="#fff" />,
   },
   {
     title: 'Informasi dan\nBerita',
     bgColor: '#F26767',
-    icon: <Ionicons name="newspaper-outline" size={28} color="#fff" />,
+    image: require('../assets/menu/berita.png'),
+   // icon: <Ionicons name="newspaper-outline" size={28} color="#fff" />,
   },
   {
     title: 'Tempat tidur',
     bgColor: '#F3A59B',
-    icon: <MaterialCommunityIcons name="bed-outline" size={28} color="#fff" />,
+    image: require('../assets/menu/tt.png'),
+  //  icon: <MaterialCommunityIcons name="bed-outline" size={28} color="#fff" />,
     route: '/bed',
   },
   {
     title: 'Jadwal\nDokter',
     bgColor: '#3A9DEB',
-    icon: <Ionicons name="calendar-clear-outline" size={28} color="#fff" />,
+    image: require('../assets/menu/jadwal.png'),
+  //  icon: <Ionicons name="calendar-clear-outline" size={28} color="#fff" />,
     route: '/jadwal-dokter',
   },
   {
     title: 'Pendaftaran\nNomor RM',
     bgColor: '#28B6F6',
-    icon: <MaterialCommunityIcons name="cellphone-text" size={28} color="#fff" />,
+    image: require('../assets/menu/rm.png'),
+   // icon: <MaterialCommunityIcons name="cellphone-text" size={28} color="#fff" />,
   },
 ];
 
 function MenuCard({
   title,
-  bgColor,
-  icon,
+  image,
   route,
 }: {
   title: string;
-  bgColor: string;
-  icon: React.ReactNode;
+  image: any;
   route?: string;
 }) {
   return (
@@ -87,7 +96,7 @@ function MenuCard({
         }
       }}
     >
-      <View style={[styles.iconCircle, { backgroundColor: bgColor }]}>{icon}</View>
+      <Image source={image} style={styles.menuIcon} />
       <Text style={styles.menuText}>{title}</Text>
     </TouchableOpacity>
   );
@@ -143,18 +152,15 @@ export default function Index() {
         </View>
 
         <View style={styles.heroWrapper}>
-          <Image
-            source={{
-              uri: 'https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?q=80&w=1200&auto=format&fit=crop',
-            }}
-            style={styles.heroBackground}
-          />
-
+            <Image
+              source={require('../assets/images/jr1.jpeg')} // masukkan foto RS di assets
+              style={styles.heroBackground}
+            />
+    
+          <BlurView intensity={70} tint="light" style={styles.menuBlur}></BlurView>
           <View style={styles.bannerCard}>
             <Image
-              source={{
-                uri: 'https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?q=80&w=1200&auto=format&fit=crop',
-              }}
+              source={require('../assets/images/jr2.jpeg')} 
               style={styles.bannerImage}
             />
 
@@ -166,19 +172,26 @@ export default function Index() {
           </View>
         </View>
 
-        <View style={styles.menuContainer}>
-          <View style={styles.menuGrid}>
-            {menuItems.map((item, index) => (
-              <MenuCard
-                key={index}
-                title={item.title}
-                bgColor={item.bgColor}
-                icon={item.icon}
-                route={item.route}
-              />
-            ))}
-          </View>
-        </View>
+        <ImageBackground
+          source={require('../assets/images/jr2.jpeg')}
+          style={styles.menuContainer}
+          imageStyle={{ borderTopLeftRadius: 22, borderTopRightRadius: 22 }}
+        >
+          <BlurView intensity={50} style={styles.menuBlur}>
+            
+            <View style={styles.menuGrid}>
+              {menuItems.map((item, index) => (
+                <MenuCard
+                  key={index}
+                  title={item.title}
+                  image={item.image}
+                  route={item.route}
+                />
+              ))}
+            </View>
+
+          </BlurView>
+        </ImageBackground>
       </ScrollView>
     </SafeAreaView>
     
@@ -213,7 +226,7 @@ const styles = StyleSheet.create({
   },
   heroWrapper: {
     position: 'relative',
-    height: 520,
+    height: 280,
     backgroundColor: '#0E7E79',
   },
   heroBackground: {
@@ -224,7 +237,7 @@ const styles = StyleSheet.create({
   },
   bannerCard: {
     position: 'absolute',
-    top: 20,
+    top: 10,
     left: 14,
     right: 14,
     borderRadius: 18,
@@ -238,7 +251,7 @@ const styles = StyleSheet.create({
   },
   bannerImage: {
     width: '100%',
-    height: 310,
+    height: 230,
     resizeMode: 'cover',
   },
   bannerOverlay: {
@@ -269,6 +282,7 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingHorizontal: 16,
     minHeight: 420,
+    overflow: 'hidden',
   },
   menuGrid: {
     flexDirection: 'row',
@@ -278,27 +292,33 @@ const styles = StyleSheet.create({
   menuItem: {
     width: CARD_WIDTH,
     alignItems: 'center',
-    marginBottom: 24,
-    paddingTop: 6,
-  },
-  iconCircle: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
+    marginBottom: 14,
+    paddingTop: 3,
   },
   menuText: {
     textAlign: 'center',
-    fontSize: 10,
+    fontSize: 12,
     color: '#222',
     lineHeight: 14,
-    fontWeight: '500',
+    fontWeight: '650',
   },
+  menuIcon: {
+    width: 75,
+    height: 75,
+    resizeMode: 'contain',
+    marginBottom: 6,
+  },
+  blurOverlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  menuBlur: {
+    flex: 1,
+    paddingTop: 18,
+    paddingHorizontal: 16,
+    //backgroundColor: 'rgba(255,255,255,0.6)', // efek putih samar
+    backgroundColor: 'rgba(255,255,255,0.35)',
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+  },
+
 });

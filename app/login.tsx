@@ -21,27 +21,33 @@ export default function LoginScreen() {
 
   const redirectUri = useMemo(() => {
     return makeRedirectUri({
-      native: 'com.googleusercontent.apps.656827986979-102opc80tg1958j8budbc0t6ca0m6sgf:/oauthredirect',
+      native:
+        'com.googleusercontent.apps.656827986979-102opc80tg1958j8budbc0t6ca0m6sgf:/oauthredirect',
     });
   }, []);
 
   const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId: '656827986979-102opc80tg1958j8budbc0t6ca0m6sgf.apps.googleusercontent.com',
-    webClientId: '656827986979-7mjtlsog99mnnlciubtmmtjmudnbd34l.apps.googleusercontent.com',
+    androidClientId:
+      '656827986979-102opc80tg1958j8budbc0t6ca0m6sgf.apps.googleusercontent.com',
+    webClientId:
+      '656827986979-7mjtlsog99mnnlciubtmmtjmudnbd34l.apps.googleusercontent.com',
     scopes: ['profile', 'email'],
     redirectUri,
   });
 
   useEffect(() => {
     console.log('redirectUri =', redirectUri);
-    //console.log('response =', JSON.stringify(response, null, 2));
+    console.log('response =', JSON.stringify(response, null, 2));
 
     const signInWithGoogle = async () => {
       if (!response) return;
 
       if (response.type !== 'success') {
         if (response.type === 'error') {
-          Alert.alert('Google Error', JSON.stringify(response.error ?? {}, null, 2));
+          Alert.alert(
+            'Google Error',
+            JSON.stringify(response.error ?? {}, null, 2)
+          );
         }
         return;
       }
@@ -50,6 +56,7 @@ export default function LoginScreen() {
         setLoading(true);
 
         const accessToken = response.authentication?.accessToken;
+
         if (!accessToken) {
           throw new Error('Access token Google tidak ditemukan');
         }
@@ -61,12 +68,13 @@ export default function LoginScreen() {
         });
 
         const profile = await res.json();
+
         await SecureStore.setItemAsync('google_id', String(profile.id || ''));
         await SecureStore.setItemAsync('google_name', profile.name || '');
         await SecureStore.setItemAsync('google_email', profile.email || '');
         await SecureStore.setItemAsync('google_photo', profile.picture || '');
+
         router.replace('/home');
-        
       } catch (err: any) {
         Alert.alert('Login gagal', err.message || 'Terjadi kesalahan');
       } finally {
@@ -80,9 +88,12 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       <Image
-        source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg' }}
+        source={{
+          uri: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg',
+        }}
         style={styles.logo}
       />
+
       <Text style={styles.title}>Masuk dengan Google</Text>
       <Text style={styles.subtitle}>Gunakan akun Google untuk melanjutkan</Text>
 
