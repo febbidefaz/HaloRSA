@@ -25,35 +25,37 @@ export default function JadwalDokterScreen() {
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#efefef',
-    padding: 14,
+    padding: 12, // sebelumnya 14
   },
+
   title: {
-    fontSize: 30,
+    fontSize: 22, // sebelumnya 30
     fontWeight: '700',
     color: '#fff',
     backgroundColor: '#0A7C86',
     textAlign: 'center',
-    paddingVertical: 12,
-    borderRadius: 10,
-    marginBottom: 14,
+    paddingVertical: 10, // sebelumnya 12
+    borderRadius: 8,
+    marginBottom: 10, // sebelumnya 14
   },
+
   card: {
     backgroundColor: '#fff',
-    borderRadius: 10,
-    paddingVertical: 22,
-    paddingHorizontal: 18,
-    marginBottom: 14,
+    borderRadius: 8,
+    paddingVertical: 14,   // sebelumnya 22
+    paddingHorizontal: 12, // sebelumnya 18
+    marginBottom: 10,      // sebelumnya 14
     flexDirection: 'row',
     alignItems: 'center',
   },
+
   cardText: {
-    fontSize: 18,
-    color: '#666',
-    marginLeft: 18,
+    fontSize: 15, // sebelumnya 18
+    color: '#555',
+    marginLeft: 12, // sebelumnya 18
   },
 });

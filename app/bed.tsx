@@ -16,7 +16,8 @@ export default function BedScreen() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const response = await fetch('https://android.rsabojonegoro.com/his/about/bedready');
+       // const response = await fetch('https://android.rsabojonegoro.com/his/about/bedready');
+        const response = await fetch('http://app.rsabojonegoro.com:5000/his/about/bedready');
         const json = await response.json();
         setData(json?._embedded?.bedReadies || []);
       } catch (err: any) {

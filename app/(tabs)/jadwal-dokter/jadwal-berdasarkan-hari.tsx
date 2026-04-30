@@ -1,13 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 const hariList = [
@@ -48,7 +47,8 @@ export default function JadwalBerdasarkanHari() {
       setErrorMsg('');
 
       const response = await fetch(
-        `https://android.rsabojonegoro.com/his/about/jadwaldokter/hari?hr=${hr}`
+      //  `https://android.rsabojonegoro.com/his/about/jadwaldokter/hari?hr=${hr}`
+        `http://app.rsabojonegoro.com:4000/his/about/jadwaldokter/hari?hr=${hr}`
       );
 
       const json = await response.json();
@@ -67,7 +67,8 @@ export default function JadwalBerdasarkanHari() {
     const loadSpesialis = async () => {
       try {
        // const res = await fetch('https://android.rsabojonegoro.com/his/new/Specialist');
-        const res = await fetch('https://app.rsabojonegoro.com:4000/his/new/Specialist');
+      //  const res = await fetch('https://app.rsabojonegoro.com:4000/his/new/Specialist');
+        const res = await fetch('http://app.rsabojonegoro.com:4000/his/new/Specialist');
         const json = await res.json();
         setSpesialisList(json || []);
       } catch (err) {
@@ -91,7 +92,10 @@ export default function JadwalBerdasarkanHari() {
   
     if (!found?.foto) return null;
   
-    return found.foto.replace('http://', 'https://');
+      // Prioritas 1: foto base64 dari field foto
+    if (found.foto) {
+      return `data:image/jpeg;base64,${found.foto}`;
+  }
   };
 
   return (
@@ -99,66 +103,30 @@ export default function JadwalBerdasarkanHari() {
       <Text style={styles.title}>Jadwal Dokter</Text>
 
       {hariList.map((hari) => (
+      <View key={hari.value}>
         <TouchableOpacity
-          key={hari.value}
           style={[
             styles.menuCard,
             selectedHari === hari.label && styles.cardActive,
           ]}
           onPress={() => {
-            setSelectedHari(hari.label);
-            setSelectedHr(hari.value);
+            router.push({
+              pathname: 'jadwal-dokter/jadwal-per-hari',
+              params: {
+                hr: hari.value,
+                hari: hari.label,
+              },
+            });
           }}
         >
           <Ionicons name="calendar-outline" size={28} color="#0A7C86" />
           <Text style={styles.cardText}>{hari.label}</Text>
         </TouchableOpacity>
-      ))}
 
-      <View style={styles.contentBox}>
-        <Text style={styles.contentTitle}>Jadwal Hari {selectedHari}</Text>
-
-        {loading && (
-          <ActivityIndicator size="large" color="#0A7C86" style={{ marginTop: 10 }} />
-        )}
-
-        {!!errorMsg && (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorText}>{errorMsg}</Text>
-          </View>
-        )}
-
-        {!loading && !errorMsg && data.length === 0 && (
-          <View style={styles.emptyBox}>
-            <Text style={styles.emptyText}>Belum ada jadwal dokter.</Text>
-          </View>
-        )}
-
-        {!loading &&
-          !errorMsg &&
-          data.map((item) => (
-            <View key={item.id} style={styles.doctorCard}>
-            <Image
-                source={{
-                    uri:
-                    item.photo ||
-                    getImageSpesialis(item.spesialis) ||
-                    getIconBySpesialis(item.spesialis),
-                }}
-                style={styles.doctorIcon}
-                resizeMode="cover"
-                />
-
-              <View style={styles.doctorInfo}>
-                <Text style={styles.spesialis}>{item.spesialis}</Text>
-                <Text style={styles.dokter}>{item.dokter}</Text>
-                <Text style={styles.jam}>
-                  {item.buka} - {item.tutup}
-                </Text>
-              </View>
-            </View>
-          ))}
+      
       </View>
+    ))}
+
     </ScrollView>
   );
 }
@@ -183,10 +151,10 @@ const styles = StyleSheet.create({
 
   menuCard: {
     backgroundColor: '#fff',
-    borderRadius: 10,
-    paddingVertical: 18,
-    paddingHorizontal: 18,
-    marginBottom: 14,
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    marginBottom: 8,
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -207,30 +175,34 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
 
-  contentTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+  title: {
+    fontSize: 22, // sebelumnya 30
+    fontWeight: '700',
+    color: '#fff',
+    backgroundColor: '#0A7C86',
+    textAlign: 'center',
+    paddingVertical: 10,
+    borderRadius: 10,
     marginBottom: 10,
-    color: '#222',
   },
 
   doctorCard: {
     backgroundColor: '#fff',
-    borderRadius: 10,
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    marginBottom: 12,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    marginBottom: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    borderBottomWidth: 2,
+    borderBottomWidth: 1,
     borderBottomColor: '#7FAEB3',
   },
 
   doctorIcon: {
-    width: 62,
-    height: 62,
-    borderRadius: 31,
-    marginRight: 14,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginRight: 10,
     backgroundColor: '#eee',
   },
 
@@ -239,20 +211,20 @@ const styles = StyleSheet.create({
   },
 
   spesialis: {
-    fontSize: 17,
+    fontSize: 14,
     fontWeight: '700',
     color: '#111',
-    marginBottom: 2,
+    marginBottom: 1,
   },
 
   dokter: {
-    fontSize: 15,
+    fontSize: 13,
     color: '#555',
-    marginBottom: 2,
+    marginBottom: 1,
   },
 
   jam: {
-    fontSize: 15,
+    fontSize: 13,
     color: '#555',
   },
 
@@ -275,5 +247,12 @@ const styles = StyleSheet.create({
 
   emptyText: {
     color: '#666',
+  },
+
+  contentTitle: {
+    fontSize: 15, // sebelumnya 18
+    fontWeight: '600',
+    marginBottom: 6,
+    color: '#222',
   },
 });

@@ -1,11 +1,12 @@
+import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    Image,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from 'react-native';
 
 type JadwalDokter = {
@@ -24,31 +25,12 @@ type Spesialis = {
   fotoOL?: string | null;
 };
 
-export default function JadwalHariIni() {
+export default function JadwalPerHari() {
+  const { hr, hari } = useLocalSearchParams();
+
   const [data, setData] = useState<JadwalDokter[]>([]);
   const [spesialisList, setSpesialisList] = useState<Spesialis[]>([]);
   const [loading, setLoading] = useState(false);
-  const [hariNama, setHariNama] = useState('');
-
-  const hariMap = [
-    'Minggu',
-    'Senin',
-    'Selasa',
-    'Rabu',
-    'Kamis',
-    'Jumat',
-    'Sabtu',
-  ];
-
-  const getToday = () => {
-    const today = new Date();
-    const hr = today.getDay();
-
-    return {
-      hr: hr === 0 ? 7 : hr,
-      nama: hariMap[hr],
-    };
-  };
 
   const getIconDefault = () => {
     return 'https://cdn-icons-png.flaticon.com/512/387/387569.png';
@@ -90,11 +72,8 @@ export default function JadwalHariIni() {
     try {
       setLoading(true);
 
-      const today = getToday();
-      setHariNama(today.nama);
-
       const res = await fetch(
-        `http://app.rsabojonegoro.com:4000/his/about/jadwaldokter/hari?hr=${today.hr}`
+        `http://app.rsabojonegoro.com:4000/his/about/jadwaldokter/hari?hr=${hr}`
       );
 
       const json = await res.json();
@@ -113,7 +92,7 @@ export default function JadwalHariIni() {
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>Jadwal Hari Ini ({hariNama})</Text>
+      <Text style={styles.title}>Jadwal {hari}</Text>
 
       {loading && (
         <ActivityIndicator size="large" color="#0A7C86" style={{ marginTop: 20 }} />
@@ -121,7 +100,7 @@ export default function JadwalHariIni() {
 
       {!loading && data.length === 0 && (
         <View style={styles.emptyBox}>
-          <Text style={styles.emptyText}>Tidak ada jadwal hari ini</Text>
+          <Text style={styles.emptyText}>Belum ada jadwal dokter.</Text>
         </View>
       )}
 
@@ -160,21 +139,22 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '700',
+    marginBottom: 12,
     color: '#fff',
     backgroundColor: '#0A7C86',
     textAlign: 'center',
     paddingVertical: 10,
     borderRadius: 10,
-    marginBottom: 12,
   },
 
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    padding: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
     borderRadius: 8,
     marginBottom: 8,
     borderBottomWidth: 1,
@@ -194,14 +174,16 @@ const styles = StyleSheet.create({
   },
 
   spesialis: {
-    fontSize: 14,
     fontWeight: '700',
+    fontSize: 14,
     color: '#111',
+    marginBottom: 2,
   },
 
   dokter: {
     fontSize: 13,
     color: '#555',
+    marginBottom: 2,
   },
 
   jam: {
@@ -216,7 +198,7 @@ const styles = StyleSheet.create({
   },
 
   emptyText: {
-    textAlign: 'center',
     color: '#666',
+    textAlign: 'center',
   },
 });
