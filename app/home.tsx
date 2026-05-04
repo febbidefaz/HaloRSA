@@ -74,8 +74,17 @@ const menuItems = [
     title: 'Pendaftaran\nNomor RM',
     bgColor: '#28B6F6',
     image: require('../assets/menu/rm.png'),
+    route: '/daftar-no-rm',
    // icon: <MaterialCommunityIcons name="cellphone-text" size={28} color="#fff" />,
   },
+  {
+    title: 'Antrian\nObat',
+    bgColor: '#28B6F6',
+    image: require('../assets/menu/obat.png'),
+   // route: '/daftar-no-rm',
+   // icon: <MaterialCommunityIcons name="cellphone-text" size={28} color="#fff" />,
+  },
+
 ];
 
 function MenuCard({
@@ -192,6 +201,7 @@ export default function Index() {
 
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+      
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
             <View>
@@ -269,10 +279,11 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: 'rgba(255,255,255,0.85)',
     paddingHorizontal: 16,
-    paddingTop: 10,
+    paddingTop: 30,
     paddingBottom: 14,
     flexDirection: 'row',
     justifyContent: 'space-between',
+
   },
   headerTitle: {
     fontSize: 21,
@@ -347,8 +358,7 @@ const styles = StyleSheet.create({
   menuItem: {
     width: CARD_WIDTH,
     alignItems: 'center',
-    marginBottom: 14,
-    paddingTop: 3,
+    marginBottom: 16,
   },
   menuText: {
     textAlign: 'center',

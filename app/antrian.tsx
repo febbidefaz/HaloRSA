@@ -1,25 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Image,
-    RefreshControl,
-    SafeAreaView,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
   
-type SpecialistItem = {
-    id: number;
-    name: string;
-    foto?: string | null;
-    fotoOL?: string | null;
-  };
   
 type QueueItem = {
     id: string;
@@ -34,8 +28,7 @@ type QueueItem = {
   };
 
 export default function AntrianScreen() {
-  const [data, setData] = useState<QueueItem[]>([]);
-  const [specialistMap, setSpecialistMap] = useState<Record<number, SpecialistItem>>({});
+  const [data, setData] = useState<QueueItem[]>([]); 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -47,23 +40,9 @@ export default function AntrianScreen() {
 
   const loadData = async () => {
     try {
-      const [queueRes, specialistRes] = await Promise.all([
-   //     fetch('https://android.rsabojonegoro.com/his/quepx'),
-        fetch('http://app.rsabojonegoro.com:5000/his/quepx'),
-   //     fetch('https://app.rsabojonegoro.com:4000/his/new/Specialist'),
-   //     fetch('http://app.rsabojonegoro.com:5000/his/new/Specialist'),
-        fetch('http://app.rsabojonegoro.com:4000/his/new/Specialist'),
-      ]);
-  
+      const queueRes = await fetch('http://app.rsabojonegoro.com:5000/his/quepx');
       const queueJson = await queueRes.json();
-      const specialistJson: SpecialistItem[] = await specialistRes.json();
   
-      const map: Record<number, SpecialistItem> = {};
-      specialistJson.forEach((sp) => {
-        map[sp.id] = sp;
-      });
-       
-      setSpecialistMap(map);
       setData(queueJson?._embedded?.quePxes || []);
     } catch (error) {
       console.log('Error antrian:', error);
@@ -113,6 +92,7 @@ export default function AntrianScreen() {
         </TouchableOpacity>
 
         <View style={styles.headerTextWrap}>
+          <Text style={styles.headerTitle}></Text>
           <Text style={styles.headerTitle}>Antrian Rawat Jalan</Text>
           <Text style={styles.headerSubtitle}>
             {tanggal}, {jam}
@@ -120,50 +100,42 @@ export default function AntrianScreen() {
         </View>
       </View>
 
-      <ScrollView
+      <FlatList
+        data={data}
+        keyExtractor={(item) => item.id}
         style={styles.content}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#0A7C86']} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#0A7C86']}
+          />
         }
-      >
-      {data.map((item) => {
-        const specialist = specialistMap[item.idpoli];
-
-        return (
-            <View key={item.id} style={styles.card}>
+        renderItem={({ item }) => (
+          <View style={styles.card}>
             <Image
-                source={
-                specialist?.foto
-                    ? { uri: `data:image/jpeg;base64,${specialist.foto}` }
-                    : specialist?.fotoOL
-                    ? { uri: specialist.fotoOL }
-                    : item.fotoOL
-                    ? { uri: item.fotoOL }
-                    : require('../assets/menu/konsul.png')
-                }
-                style={styles.icon}
+              source={`http://app.rsabojonegoro.com:1111/foto/clinic/${item.idpoli}.png`}
+              style={styles.icon}
+              contentFit="cover"
+              cachePolicy="disk"
+              transition={150}
             />
 
             <View style={styles.info}>
-            <View style={styles.topLine}>
-                <Text style={styles.poli}>{item.poli}</Text>
-            </View>
+              <Text style={styles.poli}>{item.poli}</Text>
 
               <View style={styles.rowDokter}>
-                <Text style={styles.dokter}>
-                {item.dokter}
-                </Text>
+                <Text style={styles.dokter}>{item.dokter}</Text>
                 <Text style={styles.shift}>{getShift(item.jp)}</Text>
-            </View>    
+              </View>
 
-            <Text style={styles.queueText}>
+              <Text style={styles.queueText}>
                 {item.allpx} pasien, {item.finishpx} terlayani
-            </Text>
+              </Text>
             </View>
-            </View>
-        );
-        })}  
-      </ScrollView>
+          </View>
+        )}
+      />
     </SafeAreaView>
   );
 }
@@ -175,7 +147,7 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#0A7C86',
-    paddingTop: 10,
+    paddingTop: 5,   // 🔼 naikkan header
     paddingBottom: 8,
     paddingHorizontal: 10,
     flexDirection: 'row',
@@ -183,6 +155,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     marginRight: 12,
+    marginTop: 10,
   },
   headerTextWrap: {
     flex: 1,

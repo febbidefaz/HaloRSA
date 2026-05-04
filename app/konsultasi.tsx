@@ -4,11 +4,10 @@ import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Linking,
-  SafeAreaView,
-  StyleSheet,
+  SafeAreaView, StatusBar, StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 
 type WAItem = {
@@ -63,7 +62,7 @@ export default function KonsultasiScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      
+      <StatusBar backgroundColor="#0A7C86" barStyle="light-content" />
       {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
@@ -97,6 +96,7 @@ const styles = StyleSheet.create({
       alignItems: 'center',
       padding: 14,
       gap: 10,
+      paddingTop: 35,
     },
     title: {
       color: '#fff',

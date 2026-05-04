@@ -1,16 +1,16 @@
 import logoRSA from '@/assets/images/logorsa.png';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator, Alert, Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    ToastAndroid,
-    TouchableOpacity,
-    View
+  ActivityIndicator, Alert, Image,
+  ScrollView, StatusBar, StyleSheet,
+  Text,
+  TextInput,
+  ToastAndroid,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import Modal from 'react-native-modal';
 import QRCode from 'react-native-qrcode-svg';
@@ -160,9 +160,18 @@ const disableBatal =
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>Riwayat pendaftaran</Text>
-      <Text style={styles.subtitle}>semua riwayat pendaftaran pasien</Text>
+      <StatusBar backgroundColor="#0A7C86" barStyle="light-content" />
 
+      <View style={styles.header}>
+      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <Ionicons name="arrow-back" size={26} color="#fff" />
+      </TouchableOpacity>
+
+      <View style={{ flex: 1 }}>
+        <Text style={styles.title}>Riwayat pendaftaran</Text>
+        <Text style={styles.subtitle}>semua riwayat pendaftaran pasien</Text>
+      </View>
+    </View>
       {loading && (
         <ActivityIndicator size="large" color="#0A7C86" style={{ marginTop: 20 }} />
       )}
@@ -410,21 +419,16 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
 
   title: {
-    backgroundColor: '#0A7C86',
     color: '#fff',
     fontSize: 22,
     fontWeight: '700',
     textAlign: 'center',
-    paddingTop: 16,
-    paddingBottom: 2,
   },
-
+  
   subtitle: {
-    backgroundColor: '#0A7C86',
     color: '#fff',
     fontSize: 14,
     textAlign: 'center',
-    paddingBottom: 12,
   },
 
   card: {
@@ -611,5 +615,18 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 13,
     color: '#666',
+  },
+
+  header: {
+    backgroundColor: '#0A7C86',
+    paddingTop: 28,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingBottom: 5,
+  },
+  
+  backButton: {
+    marginRight: 10,
   },
 });

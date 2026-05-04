@@ -1,13 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 type Dokter = {
@@ -116,8 +118,17 @@ const loadJadwalDokter = async (idDokter: number) => {
 
   return (
     <View style={styles.container}>
+      <StatusBar backgroundColor="#0A7C86" barStyle="light-content" />
+
       <View style={styles.header}>
-          <Text style={styles.headerTitle}>Jadwal Dokter {nama}</Text>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
+          <Ionicons name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
+
+        <Text style={styles.headerTitle}>Jadwal Dokter {nama}</Text>
       </View>
 
       {loading ? (
@@ -128,30 +139,36 @@ const loadJadwalDokter = async (idDokter: number) => {
         <ScrollView style={styles.content} showsVerticalScrollIndicator>
           {data.map((item) => (
             <View key={item.id}>
-              <TouchableOpacity
-                activeOpacity={0.75}
-                style={[
-                  styles.card,
-                  selectedDokter.includes(item.id) && styles.cardActive,
-                ]}
-                onPress={() => loadJadwalDokter(item.id)}
-              >
-                <View style={styles.iconCircle}>
-                  <Ionicons name="person-outline" size={22} color="#0A7C86" />
-                </View>
+            <TouchableOpacity
+              activeOpacity={0.75}
+              style={[
+                styles.card,
+                selectedDokter.includes(item.id) && styles.cardActive,
+              ]}
+              onPress={() => loadJadwalDokter(item.id)}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                
+                <Image
+                  source={{
+                    uri: `http://app.rsabojonegoro.com:1111/foto/dr/${item.id}.jpg`,
+                  }}
+                  style={styles.avatar}
+                />
 
                 <Text style={styles.name}>{item.dokter}</Text>
+              </View>
 
-                <Ionicons
-                 name={
-                    selectedDokter.includes(item.id)
-                        ? 'chevron-up-outline'
-                        : 'chevron-down-outline'
-                    }
-                  size={22}
-                  color="#0A7C86"
-                />
-              </TouchableOpacity>
+              <Ionicons
+                name={
+                  selectedDokter.includes(item.id)
+                    ? 'chevron-up-outline'
+                    : 'chevron-down-outline'
+                }
+                size={22}
+                color="#0A7C86"
+              />
+            </TouchableOpacity>
 
            {selectedDokter.includes(item.id) && (
   <View style={styles.jadwalBox}>
@@ -230,20 +247,17 @@ const styles = StyleSheet.create({
 
   header: {
     backgroundColor: '#0A7C86',
-    marginHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 10,
-    borderRadius: 18,
-    paddingVertical: 14,
+    paddingTop: 34,
+    paddingBottom: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    elevation: 3,
   },
   
-
   backButton: {
     position: 'absolute',
-    left: 12,
-    top: 14,
+    left: 14,
+    top: 36, 
     zIndex: 10,
   },
 
@@ -397,5 +411,12 @@ jam: {
   fontSize: 14,
   color: '#444',
   fontWeight: '500',
+},
+
+avatar: {
+  width: 50,
+  height: 50,
+  borderRadius: 25,
+  marginRight: 12,
 },
 });

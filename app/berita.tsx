@@ -2,13 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 type Berita = {
@@ -56,6 +57,8 @@ export default function InformasiBerita() {
 
   return (
     <View style={styles.container}>
+      <StatusBar backgroundColor="#0A7C86" barStyle="light-content" />
+
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -64,14 +67,18 @@ export default function InformasiBerita() {
           <Ionicons name="chevron-back" size={30} color="#fff" />
         </TouchableOpacity>
 
-        <View>
+        <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>Informasi</Text>
           <Text style={styles.headerSubtitle}>berita dan informasi RSA</Text>
         </View>
       </View>
 
       {loading && (
-        <ActivityIndicator size="large" color="#0A7C86" style={{ marginTop: 30 }} />
+        <ActivityIndicator
+          size="large"
+          color="#0A7C86"
+          style={{ marginTop: 30 }}
+        />
       )}
 
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -96,10 +103,9 @@ export default function InformasiBerita() {
                 onPress={() =>
                   router.push({
                     pathname: '/berita-detail',
-                    params: { id: item.id, },
+                    params: { id: item.id },
                   })
                 }
-            
               >
                 <Image
                   source={{ uri: imageUrl }}
@@ -134,15 +140,22 @@ const styles = StyleSheet.create({
 
   header: {
     backgroundColor: '#0A7C86',
-    paddingTop: 14,
+    paddingTop: 30,
     paddingBottom: 12,
     paddingHorizontal: 14,
-    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  headerCenter: {
     alignItems: 'center',
   },
 
   backButton: {
-    marginRight: 10,
+    position: 'absolute',
+    left: 14,
+    top: 32,
+    zIndex: 10,
   },
 
   headerTitle: {

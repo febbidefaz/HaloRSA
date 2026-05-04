@@ -4,14 +4,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Animated,
-  ScrollView,
-  StyleSheet,
+  ScrollView, StatusBar, StyleSheet,
   Switch,
   Text,
   TextInput,
   ToastAndroid,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 
 export default function KritikSaran() {
@@ -232,6 +231,7 @@ export default function KritikSaran() {
 
   return (
     <View style={styles.container}>
+      <StatusBar backgroundColor="#0A7C86" barStyle="light-content" />
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -556,7 +556,7 @@ const styles = StyleSheet.create({
 
   header: {
     backgroundColor: '#0A7C86',
-    paddingTop: 12,
+    paddingTop: 30,
     paddingBottom: 10,
     paddingHorizontal: 10,
     flexDirection: 'row',

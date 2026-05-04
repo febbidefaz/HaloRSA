@@ -87,172 +87,134 @@ export default function JadwalBerdasarkanHari() {
     if (!spesialisList.length) return null;
   
     const found = spesialisList.find((s) =>
-      spesialis.toLowerCase().includes(s.name.toLowerCase())
+      spesialis.toLowerCase().includes(s.name.toLowerCase()) ||
+      s.name.toLowerCase().includes(spesialis.toLowerCase())
     );
   
-    if (!found?.foto) return null;
+    if (!found) return null;
   
-      // Prioritas 1: foto base64 dari field foto
-    if (found.foto) {
-      return `data:image/jpeg;base64,${found.foto}`;
-  }
+    return `http://app.rsabojonegoro.com:1111/foto/clinic/${found.id}.png`;
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Jadwal Dokter</Text>
-
-      {hariList.map((hari) => (
-      <View key={hari.value}>
+    <View style={styles.container}>
+      {/* HEADER */}
+      <View style={styles.header}>
         <TouchableOpacity
-          style={[
-            styles.menuCard,
-            selectedHari === hari.label && styles.cardActive,
-          ]}
-          onPress={() => {
-            router.push({
-              pathname: 'jadwal-dokter/jadwal-per-hari',
-              params: {
-                hr: hari.value,
-                hari: hari.label,
-              },
-            });
-          }}
+          onPress={() => router.back()}
+          style={styles.backButton}
         >
-          <Ionicons name="calendar-outline" size={28} color="#0A7C86" />
-          <Text style={styles.cardText}>{hari.label}</Text>
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-
-      
+  
+        <Text style={styles.headerTitle}>Jadwal Dokter</Text>
       </View>
-    ))}
-
-    </ScrollView>
+  
+      <ScrollView style={styles.content}>
+        {hariList.map((hari) => (
+          <View key={hari.value}>
+            <TouchableOpacity
+              style={[
+                styles.menuCard,
+                selectedHari === hari.label && styles.cardActive,
+              ]}
+              onPress={() => {
+                router.push({
+                  pathname: 'jadwal-dokter/jadwal-per-hari',
+                  params: {
+                    hr: hari.value,
+                    hari: hari.label,
+                  },
+                });
+              }}
+            >
+              <Ionicons name="calendar-outline" size={26} color="#0A7C86" />
+              <Text style={styles.cardText}>{hari.label}</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#efefef',
-    padding: 14,
+    backgroundColor: '#F4F7F7',
   },
 
-  title: {
-    fontSize: 30,
-    fontWeight: '700',
-    color: '#fff',
+  header: {
     backgroundColor: '#0A7C86',
-    textAlign: 'center',
-    paddingVertical: 12,
-    borderRadius: 10,
-    marginBottom: 14,
+    paddingTop: 34,
+    paddingBottom: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
+  },
+
+  headerTitle: {
+    color: '#fff',
+    fontSize: 19,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
+
+  backButton: {
+    position: 'absolute',
+    left: 14,
+    top: 36,
+    zIndex: 10,
+  },
+
+  content: {
+    padding: 14,
   },
 
   menuCard: {
     backgroundColor: '#fff',
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    marginBottom: 8,
+    borderRadius: 14,
+    paddingVertical: 15,
+    paddingHorizontal: 14,
+    marginBottom: 10,
     flexDirection: 'row',
     alignItems: 'center',
+    borderLeftWidth: 4,
+    borderLeftColor: '#0A7C86',
+    elevation: 2,
   },
 
   cardActive: {
-    backgroundColor: '#d7f3f6',
-    borderLeftWidth: 5,
-    borderLeftColor: '#0A7C86',
+    backgroundColor: '#E7F5F6',
   },
 
   cardText: {
-    fontSize: 18,
-    color: '#666',
-    marginLeft: 18,
-  },
-
-  contentBox: {
-    marginTop: 10,
-  },
-
-  title: {
-    fontSize: 22, // sebelumnya 30
-    fontWeight: '700',
-    color: '#fff',
-    backgroundColor: '#0A7C86',
-    textAlign: 'center',
-    paddingVertical: 10,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-
-  doctorCard: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    marginBottom: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#7FAEB3',
-  },
-
-  doctorIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    marginRight: 10,
-    backgroundColor: '#eee',
-  },
-
-  doctorInfo: {
-    flex: 1,
-  },
-
-  spesialis: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#111',
-    marginBottom: 1,
-  },
-
-  dokter: {
-    fontSize: 13,
-    color: '#555',
-    marginBottom: 1,
-  },
-
-  jam: {
-    fontSize: 13,
-    color: '#555',
+    fontSize: 16,
+    color: '#333',
+    marginLeft: 14,
+    fontWeight: '600',
   },
 
   errorBox: {
-    backgroundColor: '#ffd9d9',
+    backgroundColor: '#FFE5E5',
     padding: 12,
-    borderRadius: 10,
+    borderRadius: 12,
     marginTop: 10,
   },
 
   errorText: {
-    color: 'red',
+    color: '#D32F2F',
+    fontWeight: '600',
   },
 
   emptyBox: {
     backgroundColor: '#fff',
     padding: 14,
-    borderRadius: 10,
+    borderRadius: 12,
   },
 
   emptyText: {
     color: '#666',
-  },
-
-  contentTitle: {
-    fontSize: 15, // sebelumnya 18
-    fontWeight: '600',
-    marginBottom: 6,
-    color: '#222',
+    textAlign: 'center',
   },
 });

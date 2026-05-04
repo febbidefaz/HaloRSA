@@ -1,9 +1,13 @@
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 
@@ -16,8 +20,9 @@ export default function BedScreen() {
   useEffect(() => {
     const loadData = async () => {
       try {
-       // const response = await fetch('https://android.rsabojonegoro.com/his/about/bedready');
-        const response = await fetch('http://app.rsabojonegoro.com:5000/his/about/bedready');
+        const response = await fetch(
+          'http://app.rsabojonegoro.com:5000/his/about/bedready'
+        );
         const json = await response.json();
         setData(json?._embedded?.bedReadies || []);
       } catch (err: any) {
@@ -35,7 +40,7 @@ export default function BedScreen() {
     const timer = setInterval(() => {
       setNow(new Date());
     }, 1000);
-  
+
     return () => clearInterval(timer);
   }, []);
 
@@ -47,7 +52,7 @@ export default function BedScreen() {
       year: 'numeric',
     });
   };
-  
+
   const formatJam = (date: Date) => {
     return date.toLocaleTimeString('id-ID', {
       hour: '2-digit',
@@ -55,17 +60,14 @@ export default function BedScreen() {
     });
   };
 
-  const kelasList = ['VVIP', 'VIP', 'I', 'II', 'III', 'HCU', 'ISOLASI'];
+  const kelasList = ['V VIP', 'VIP', 'I', 'II', 'III', 'HCU', 'ISOLASI'];
 
   const isBirali2 = (paviliun: string) =>
     String(paviliun || '').trim().toUpperCase() === "BI'RALI- 2" ||
     String(paviliun || '').trim().toUpperCase() === "BI'RALI-2";
 
-  // Tabel utama:
-  // - buang ICU
-  // - buang semua NEONATUS
-  // - buang seluruh baris BI'RALI-2
   const grouped: Record<string, Record<string, number>> = {};
+
   data
     .filter((item: any) => {
       const kelas = String(item.kelas || '').toUpperCase();
@@ -80,17 +82,16 @@ export default function BedScreen() {
     .forEach((item: any) => {
       const pav = item.paviliun;
       if (!grouped[pav]) grouped[pav] = {};
-      grouped[pav][item.kelas] = (grouped[pav][item.kelas] || 0) + (Number(item.ready) || 0);
+      grouped[pav][item.kelas] =
+        (grouped[pav][item.kelas] || 0) + (Number(item.ready) || 0);
     });
 
   const ruangBiasa = Object.keys(grouped);
 
-  // ICU total
   const totalICU = data
     .filter((item: any) => String(item.kelas || '').toUpperCase() === 'ICU')
     .reduce((sum: number, item: any) => sum + (Number(item.ready) || 0), 0);
 
-  // Nilai khusus BI'RALI-2 dipindah ke NEONATUS kolom II
   const neonatusKelas2 = data
     .filter(
       (item: any) =>
@@ -99,7 +100,6 @@ export default function BedScreen() {
     )
     .reduce((sum: number, item: any) => sum + (Number(item.ready) || 0), 0);
 
-  // NEONATUS selain BI'RALI-2 masuk kolom ISOLASI
   const neonatusIsolasi = data
     .filter(
       (item: any) =>
@@ -109,194 +109,223 @@ export default function BedScreen() {
     .reduce((sum: number, item: any) => sum + (Number(item.ready) || 0), 0);
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Informasi Tempat Tidur</Text>
+    <View style={styles.page}>
+      <StatusBar backgroundColor="#00897B" barStyle="light-content" />
 
-      <Text style={styles.subtitle}>
-        {formatTanggal(now)}, {formatJam(now)} WIB
-      </Text>
-      {loading && <ActivityIndicator size="large" color="#00897B" />}
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
+          <Ionicons name="arrow-back" size={26} color="#fff" />
+        </TouchableOpacity>
 
-      {!!errorMsg && (
-        <View style={styles.errorBox}>
-          <Text style={styles.errorText}>Error: {errorMsg}</Text>
-        </View>
-      )}
-
-      <View style={styles.headerRow}>
-        <Text style={[styles.headerText, styles.cellRuangan]}>Ruangan</Text>
-        {kelasList.map((k) => (
-          <Text
-            key={k}
-            style={[
-              styles.headerText,
-              k === 'ISOLASI' ? styles.headerTextIsolasi : null,
-            ]}
-            numberOfLines={1}
-          >
-            {k}
-          </Text>
-        ))}
+        <Text style={styles.headerTitle}>Informasi Tempat Tidur</Text>
       </View>
 
-      {ruangBiasa.map((ruang, index) => (
-        <View key={index} style={styles.row}>
-          <Text style={styles.cellRuangan}>{ruang}</Text>
-          {kelasList.map((k, i) => (
-            <Text key={i} style={styles.cell}>
-              {grouped[ruang][k] ?? ''}
+      <ScrollView style={styles.container}>
+        <Text style={styles.subtitle}>
+          {formatTanggal(now)}, {formatJam(now)} WIB
+        </Text>
+
+        {loading && <ActivityIndicator size="large" color="#00897B" />}
+
+        {!!errorMsg && (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>Error: {errorMsg}</Text>
+          </View>
+        )}
+
+        <View style={styles.headerRow}>
+          <Text style={[styles.headerText, styles.cellRuangan, { color: '#fff' }]}>Ruangan</Text>
+          {kelasList.map((k) => (
+            <Text
+              key={k}
+              style={[
+                styles.headerText,
+                k === 'ISOLASI' ? styles.headerTextIsolasi : null,
+              ]}
+              numberOfLines={1}
+            >
+              {k}
             </Text>
           ))}
         </View>
-      ))}
 
-      {/* ICU di bawah */}
-      <View style={styles.row}>
-        <Text style={[styles.cellRuangan, styles.cellRuangan]}>ICU</Text>
-        {kelasList.map((k, i) => (
-          <Text key={i} style={styles.cell}>
-            {k === 'ISOLASI' ? totalICU : ''}
-          </Text>
+        {ruangBiasa.map((ruang, index) => (
+          <View key={index} style={styles.row}>
+            <Text style={styles.cellRuangan}>{ruang}</Text>
+            {kelasList.map((k, i) => (
+              <Text key={i} style={styles.cell}>
+                {grouped[ruang][k] ?? ''}
+              </Text>
+            ))}
+          </View>
         ))}
-      </View>
 
-      {/* NEONATUS di bawah */}
-      <View style={styles.row}>
-        <Text style={[styles.cellRuangan, styles.cellRuangan]}>NEONATUS</Text>
-        {kelasList.map((k, i) => (
-          <Text key={i} style={styles.cell}>
-            {k === 'II' ? neonatusKelas2 : k === 'ISOLASI' ? neonatusIsolasi : ''}
+        <View style={styles.row}>
+          <Text style={styles.cellRuangan}>ICU</Text>
+          {kelasList.map((k, i) => (
+            <Text key={i} style={styles.cell}>
+              {k === 'ISOLASI' ? totalICU : ''}
+            </Text>
+          ))}
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.cellRuangan}>NEONATUS</Text>
+          {kelasList.map((k, i) => (
+            <Text key={i} style={styles.cell}>
+              {k === 'II'
+                ? neonatusKelas2
+                : k === 'ISOLASI'
+                ? neonatusIsolasi
+                : ''}
+            </Text>
+          ))}
+        </View>
+
+        <View style={styles.keterangan}>
+          <Text style={styles.keteranganTitle}>Keterangan:</Text>
+
+          <Text style={styles.keteranganItem}>
+            Angka menunjukkan jumlah tempat tidur yang siap dipakai, jika angka
+            menunjukkan 0 maka tempat tidur / bed sedang penuh. Data di atas
+            diupdate otomatis setiap 1 menit.
           </Text>
-        ))}
-      </View>
 
-      <View style={styles.keterangan}>
-        <Text style={styles.keteranganTitle}>Keterangan:</Text>
-
-        <Text style={styles.keteranganItem}>
-          Angka menunjukkan jumlah tempat tidur yang siap dipakai, jika angka menunjukkan 0 maka tempat tidur /bed sedang penuh.
-          (data di atas diupdate otomatis setiap 1 menit)
-        </Text>
-
-        <Text>
-        <Text style={styles.keteranganTitle}>Arofah:</Text>
-        Ruang Perawatan Umum
-        </Text>
-
-        <Text>  
-        <Text style={styles.keteranganTitle}>Birali 1:</Text>
-        Ruang Perawatan Dewasa
-        </Text>
-
-        <Text> 
-        <Text style={styles.keteranganTitle}>Birali 3:</Text>
-        Ruang Perawatan Kandungan
-        </Text>
-
-        <Text>
-        <Text style={styles.keteranganTitle}>Birali 4:</Text>
-        Ruang Perawatan Anak
-        </Text>
-
-        <Text>  
-        <Text style={styles.keteranganTitle}>Ji'ronah 5:</Text>
-        Ruang Perawatan Dewasa
-        </Text>
-
-        <Text>   
-        <Text style={styles.keteranganTitle}>Ji'ronah 6:</Text>
-        Ruang Perawatan Dewasa
-        </Text>
-
-        <Text>
-        <Text style={styles.keteranganTitle}>Ji'ronah 7:</Text>
-        Ruang Perawatan Umum
-        </Text>
-
-        <Text>
-        <Text style={styles.keteranganTitle}>Neonatus:</Text>
-        Ruang Perawatan Bayi
-        </Text>
-      </View>
-    </ScrollView>
+          <Text><Text style={styles.keteranganTitle}>Arofah: </Text>Ruang Perawatan Umum</Text>
+          <Text><Text style={styles.keteranganTitle}>Birali 1: </Text>Ruang Perawatan Dewasa</Text>
+          <Text><Text style={styles.keteranganTitle}>Birali 3: </Text>Ruang Perawatan Kandungan</Text>
+          <Text><Text style={styles.keteranganTitle}>Birali 4: </Text>Ruang Perawatan Anak</Text>
+          <Text><Text style={styles.keteranganTitle}>Ji'ronah 5: </Text>Ruang Perawatan Dewasa</Text>
+          <Text><Text style={styles.keteranganTitle}>Ji'ronah 6: </Text>Ruang Perawatan Dewasa</Text>
+          <Text><Text style={styles.keteranganTitle}>Ji'ronah 7: </Text>Ruang Perawatan Umum</Text>
+          <Text><Text style={styles.keteranganTitle}>Neonatus: </Text>Ruang Perawatan Bayi</Text>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  page: {
+    flex: 1,
+    backgroundColor: '#F4F7F7',
+  },
+
+  header: {
+    backgroundColor: '#00897B',
+    paddingTop: 34,
+    paddingBottom: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
+  },
+
+  headerTitle: {
+    color: '#fff',
+    fontSize: 19,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
+
+  backButton: {
+    position: 'absolute',
+    left: 14,
+    top: 36,
+    zIndex: 10,
+  },
+
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    padding: 10,
+    padding: 12,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 10,
+
+  subtitle: {
+    textAlign: 'center',
+    fontSize: 13,
+    color: '#00897B',
+    marginBottom: 12,
+    fontWeight: '600',
   },
+
   errorBox: {
-    backgroundColor: '#ffd9d9',
+    backgroundColor: '#FFE5E5',
     padding: 10,
-    borderRadius: 8,
+    borderRadius: 10,
     marginBottom: 10,
   },
+
   errorText: {
-    color: 'red',
+    color: '#D32F2F',
+    fontWeight: '600',
   },
+
   headerRow: {
     flexDirection: 'row',
     backgroundColor: '#00897B',
-    paddingVertical: 8,
+    paddingVertical: 10,
     paddingHorizontal: 4,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
   },
+
   headerTextIsolasi: {
     flex: 1.2,
   },
+
   headerText: {
     flex: 1,
     color: '#fff',
-    fontWeight: 'bold',
+    fontWeight: '700',
     textAlign: 'center',
     fontSize: 11,
     includeFontPadding: false,
   },
+
   row: {
     flexDirection: 'row',
+    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderColor: '#ddd',
-    paddingVertical: 8,
+    borderColor: '#E6E6E6',
+    paddingVertical: 9,
     paddingHorizontal: 4,
   },
+
   cellRuangan: {
     flex: 1.6,
     fontSize: 12,
+    fontWeight: '600',
+    color: '#333',
   },
+
   cell: {
     flex: 1,
     textAlign: 'center',
     fontSize: 12,
+    color: '#333',
+    fontWeight: '600',
   },
-  specialRoom: {
-    fontWeight: 'bold',
-    color: '#00897B',
-  },
+
   keterangan: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: '#F5E6B3',
-    borderRadius: 10,
+    marginTop: 18,
+    marginBottom: 24,
+    padding: 14,
+    backgroundColor: '#FFF6D8',
+    borderRadius: 14,
+    borderLeftWidth: 5,
+    borderLeftColor: '#F5A000',
   },
+
   keteranganTitle: {
-    fontWeight: 'bold',
-    marginRight: 6,
+    fontWeight: '700',
+    color: '#333',
   },
-  subtitle: {
-    textAlign: 'center',
-    fontSize: 13,
-    color: '#0A7C86',
-    marginBottom: 10,
-    fontWeight: '500',
-  },
+
   keteranganItem: {
     marginBottom: 8,
+    color: '#555',
+    lineHeight: 19,
   },
 });

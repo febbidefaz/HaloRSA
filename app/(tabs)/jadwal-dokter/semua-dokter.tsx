@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   Image,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -42,16 +43,24 @@ export default function SemuaDokter() {
   }, []);
 
   const getImageSource = (item: Specialist) => {
-    if (item.fotoOL) return { uri: item.fotoOL };
-    if (item.foto) return { uri: `data:image/jpeg;base64,${item.foto}` };
-    return null;
+    return {
+      uri: `http://app.rsabojonegoro.com:1111/foto/clinic/${item.id}.png`,
+    };
   };
 
   return (
     <View style={styles.container}>
+      <StatusBar backgroundColor="#0A7C86" barStyle="light-content" />
       <View style={styles.header}>
-          <Text style={styles.headerTitle}>Jadwal Dokter Spesialis</Text>
-      </View>
+      <TouchableOpacity
+        onPress={() => router.back()}
+        style={styles.backButton}
+      >
+        <Ionicons name="arrow-back" size={24} color="#fff" />
+      </TouchableOpacity>
+
+      <Text style={styles.headerTitle}>Jadwal Dokter Spesialis</Text>
+    </View>
 
       {loading ? (
         <View style={styles.loadingBox}>
@@ -79,7 +88,12 @@ export default function SemuaDokter() {
                 >
                 <View style={styles.iconCircle}>
                   {img ? (
-                    <Image source={img} style={styles.iconImage} resizeMode="cover" />
+                    <Image
+                    source={img}
+                    style={styles.iconImage}
+                    resizeMode="cover"
+                    onError={() => console.log('Foto spesialis tidak ditemukan:', item.id)}
+                  />
                   ) : (
                     <Ionicons name="medkit-outline" size={22} color="#BDBDBD" />
                   )}
@@ -105,25 +119,23 @@ const styles = StyleSheet.create({
 
   header: {
     backgroundColor: '#0A7C86',
-    marginHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 10,
-    borderRadius: 18,
-    paddingVertical: 14,
+    paddingTop: 34,
+    paddingBottom: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    elevation: 3,
   },
-
+  
   backButton: {
     position: 'absolute',
-    left: 12,
-    top: 14,
+    left: 14,
+    top: 36,
     zIndex: 10,
   },
-
-   headerTitle: {
+  
+  headerTitle: {
     color: '#fff',
-    fontSize: 19,
+    fontSize: 18,
     fontWeight: '700',
     letterSpacing: 0.3,
     textAlign: 'center',
