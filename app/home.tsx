@@ -81,7 +81,7 @@ const menuItems = [
     title: 'Antrian\nObat',
     bgColor: '#28B6F6',
     image: require('../assets/menu/obat.png'),
-   // route: '/daftar-no-rm',
+    route: '/antrian-obat',
    // icon: <MaterialCommunityIcons name="cellphone-text" size={28} color="#fff" />,
   },
 

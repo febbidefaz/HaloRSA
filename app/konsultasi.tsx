@@ -1,14 +1,16 @@
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Linking,
-  SafeAreaView, StatusBar, StyleSheet,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  View
-} from 'react-native';
+  View,
+} from "react-native";
 
 type WAItem = {
   id: string;
@@ -24,7 +26,7 @@ export default function KonsultasiScreen() {
     try {
       const res = await fetch(
         //'https://app.rsabojonegoro.com:4000/his/new/NoWAAndroid'
-        'http://app.rsabojonegoro.com:5000/his/new/NoWAAndroid'
+        "http://app.rsabojonegoro.com:5000/his/new/NoWAAndroid",
       );
       const json = await res.json();
 
@@ -44,7 +46,7 @@ export default function KonsultasiScreen() {
     if (!data?.nowa) return;
 
     const message = encodeURIComponent(
-      'Assalamu’alaikum wr. wb, saya ingin konsultasi dokter di RS Aisyiyah Bojonegoro'
+      "Assalamu’alaikum wr. wb, saya ingin konsultasi dokter di RS Aisyiyah Bojonegoro",
     );
 
     const url = `https://wa.me/${data.nowa}?text=${message}`;
@@ -86,49 +88,50 @@ export default function KonsultasiScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: '#fff',
-    },
-    header: {
-      backgroundColor: '#0A7C86',
-      flexDirection: 'row',
-      alignItems: 'center',
-      padding: 14,
-      gap: 10,
-      paddingTop: 35,
-    },
-    title: {
-      color: '#fff',
-      fontSize: 18,
-      fontWeight: '700',
-    },
-    content: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 20,
-    },
-    desc: {
-      fontSize: 14,
-      color: '#555',
-      textAlign: 'center',
-      marginBottom: 20,
-    },
-    button: {
-      backgroundColor: '#25D366',
-      paddingVertical: 14,
-      paddingHorizontal: 30,
-      borderRadius: 10,
-    },
-    buttonText: {
-      color: '#fff',
-      fontWeight: '700',
-      fontSize: 16,
-    },
-    loading: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-  });
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  header: {
+    backgroundColor: "#0A7C86",
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 14,
+    gap: 10,
+    paddingTop: 35,
+  },
+
+  title: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  content: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  desc: {
+    fontSize: 14,
+    color: "#555",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  button: {
+    backgroundColor: "#25D366",
+    paddingVertical: 14,
+    paddingHorizontal: 30,
+    borderRadius: 10,
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 16,
+  },
+  loading: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+});
