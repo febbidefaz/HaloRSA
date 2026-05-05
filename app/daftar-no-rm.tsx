@@ -54,7 +54,7 @@ export default function PendaftaranRM() {
       const googleId = await SecureStore.getItemAsync("google_id");
 
       const res = await fetch(
-        `http://app.rsabojonegoro.com:5000/his/reg/regpxol/userid?userid=${googleId}`
+        `http://app.rsabojonegoro.com:5000/his/reg/regpxol/userid?userid=${googleId}`,
       );
 
       const json = await res.json();
@@ -72,32 +72,32 @@ export default function PendaftaranRM() {
   }, []);
 
   type FormKey =
-  | "nik"
-  | "nojkn"
-  | "nama"
-  | "kecamatan"
-  | "kelurahan"
-  | "alamat"
-  | "tlahir"
-  | "telepon"
-  | "pekerjaan"
-  | "suamiistri"
-  | "ayah"
-  | "pekerjaan_ayah"
-  | "goldar"
-  | "jk"
-  | "status"
-  | "suku"
-  | "agama"
-  | "pendidikan";
+    | "nik"
+    | "nojkn"
+    | "nama"
+    | "kecamatan"
+    | "kelurahan"
+    | "alamat"
+    | "tlahir"
+    | "telepon"
+    | "pekerjaan"
+    | "suamiistri"
+    | "ayah"
+    | "pekerjaan_ayah"
+    | "goldar"
+    | "jk"
+    | "status"
+    | "suku"
+    | "agama"
+    | "pendidikan";
 
-type FormField = {
-  key: FormKey;
-  label: string;
-  placeholder: string;
-};
+  type FormField = {
+    key: FormKey;
+    label: string;
+    placeholder: string;
+  };
 
-const formFields: FormField[] = [
+  const formFields: FormField[] = [
     { key: "nik", label: "NIK", placeholder: "Masukkan NIK" },
     { key: "nojkn", label: "Nomor JKN", placeholder: "Masukkan nomor JKN" },
     { key: "nama", label: "Nama", placeholder: "Masukkan nama lengkap" },
@@ -124,9 +124,7 @@ const formFields: FormField[] = [
       label: "Pendidikan",
       placeholder: "Pilih pendidikan terakhir",
     },
-    
   ];
-  
 
   const scrollY = React.useRef(new Animated.Value(0)).current;
   const [contentHeight, setContentHeight] = useState(1);
@@ -169,7 +167,7 @@ const formFields: FormField[] = [
   const handleSubmit = async () => {
     try {
       const googleId = await SecureStore.getItemAsync("google_id");
-  
+
       const payload = {
         nama: form.nama,
         nik: form.nik,
@@ -191,19 +189,19 @@ const formFields: FormField[] = [
         pend: form.pendidikan, // ⬅️ penting!
         userid: googleId,
       };
-  
+
       console.log("PAYLOAD FIX:", payload);
-      
+
       if (!form.nama || form.nama.length > 30) {
         alert("Nama maksimal 30 karakter");
         return;
       }
-      
+
       if (!/^\d+$/.test(form.nik)) {
         alert("NIK harus angka");
         return;
       }
-      
+
       if (!/^\d+$/.test(form.nojkn)) {
         alert("JKN harus angka");
         return;
@@ -217,19 +215,18 @@ const formFields: FormField[] = [
             "Content-Type": "application/json",
           },
           body: JSON.stringify(payload),
-        }
+        },
       );
-  
+
       const text = await res.text();
-  
+
       if (!res.ok) {
         throw new Error(text);
       }
-  
+
       alert("Berhasil daftar RM");
       setShowForm(false);
       loadData();
-  
     } catch (err: any) {
       console.log("ERROR:", err.message);
       alert(err.message);
@@ -241,6 +238,76 @@ const formFields: FormField[] = [
   const [showSuku, setShowSuku] = useState(false);
   const [showAgama, setShowAgama] = useState(false);
   const [showPendidikan, setShowPendidikan] = useState(false);
+  const [kecamatanList, setKecamatanList] = useState<any[]>([]);
+  const [kelurahanList, setKelurahanList] = useState<any[]>([]);
+
+  const [showKecamatan, setShowKecamatan] = useState(false);
+  const [showKelurahan, setShowKelurahan] = useState(false);
+
+  const [selectedCamatId, setSelectedCamatId] = useState<number | null>(null);
+  const [dropdownScrollY] = useState(new Animated.Value(0));
+  const [dropdownContentHeight, setDropdownContentHeight] = useState(1);
+  const [dropdownHeight, setDropdownHeight] = useState(1);
+  const [agamaList, setAgamaList] = useState<any[]>([]);
+  const [sukuList, setSukuList] = useState<any[]>([]);
+  const [pendidikanList, setPendidikanList] = useState<any[]>([]);
+
+  const loadMasterData = async () => {
+    try {
+      const [agamaRes, sukuRes, pendidikanRes] = await Promise.all([
+        fetch("http://app.rsabojonegoro.com:4000/his/reg/agamaV2"),
+        fetch("http://app.rsabojonegoro.com:4000/his/reg/sukuV2"),
+        fetch("http://app.rsabojonegoro.com:4000/his/reg/pendidikanV2"),
+      ]);
+
+      setAgamaList(await agamaRes.json());
+      setSukuList(await sukuRes.json());
+      setPendidikanList(await pendidikanRes.json());
+    } catch (err) {
+      console.log("ERROR MASTER DATA:", err);
+    }
+  };
+
+  const dropdownIndicatorHeight =
+    dropdownHeight >= dropdownContentHeight
+      ? 0
+      : Math.max((dropdownHeight / dropdownContentHeight) * dropdownHeight, 35);
+
+  const dropdownIndicatorTranslateY = dropdownScrollY.interpolate({
+    inputRange: [0, Math.max(dropdownContentHeight - dropdownHeight, 1)],
+    outputRange: [0, Math.max(dropdownHeight - dropdownIndicatorHeight, 1)],
+    extrapolate: "clamp",
+  });
+
+  const loadKecamatan = async () => {
+    try {
+      const res = await fetch(
+        "http://app.rsabojonegoro.com:5000/his/reg/camat",
+      );
+      const json = await res.json();
+      setKecamatanList(json?._embedded?.kecamatans || []);
+    } catch (err) {
+      console.log("ERROR CAMAT:", err);
+    }
+  };
+
+  const loadKelurahan = async (camatId: number) => {
+    try {
+      const res = await fetch(
+        `http://app.rsabojonegoro.com:5000/his/reg/lurah?camatid=${camatId}`,
+      );
+      const json = await res.json();
+      setKelurahanList(json?._embedded?.kelurahans || []);
+    } catch (err) {
+      console.log("ERROR LURAH:", err);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+    loadKecamatan();
+    loadMasterData();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -384,7 +451,6 @@ const formFields: FormField[] = [
             style={styles.formBackdrop}
             onPress={() => setShowForm(false)}
           />
-
           <View style={styles.formBox}>
             <TouchableOpacity onPress={() => setShowForm(false)}>
               <Text style={styles.formClose}>Tutup</Text>
@@ -403,10 +469,56 @@ const formFields: FormField[] = [
                 onContentSizeChange={(_, h) => setContentHeight(h)}
                 onScroll={Animated.event(
                   [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                  { useNativeDriver: false }
+                  { useNativeDriver: false },
                 )}
                 scrollEventThrottle={16}
                 renderItem={({ item }) => {
+                  // Kecamatan
+                  if (item.key === "kecamatan") {
+                    return (
+                      <View>
+                        <Text style={styles.label}>{item.label}</Text>
+
+                        <TouchableOpacity
+                          style={styles.input}
+                          onPress={() => setShowKecamatan(true)}
+                        >
+                          <Text
+                            style={{ color: form.kecamatan ? "#000" : "#888" }}
+                          >
+                            {form.kecamatan || item.placeholder}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  }
+
+                  // kelurahan
+                  if (item.key === "kelurahan") {
+                    return (
+                      <View>
+                        <Text style={styles.label}>{item.label}</Text>
+
+                        <TouchableOpacity
+                          style={styles.input}
+                          onPress={() => {
+                            if (!selectedCamatId) {
+                              alert("Pilih kecamatan dulu");
+                              return;
+                            }
+                            setShowKelurahan(true);
+                          }}
+                        >
+                          <Text
+                            style={{ color: form.kelurahan ? "#000" : "#888" }}
+                          >
+                            {form.kelurahan || item.placeholder}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  }
+
                   // GOL DARAH
                   if (item.key === "goldar") {
                     return (
@@ -434,17 +546,17 @@ const formFields: FormField[] = [
                     return (
                       <View>
                         <Text style={styles.label}>{item.label}</Text>
-                  
+
                         <TouchableOpacity
                           style={styles.input}
                           onPress={() => setShowJK(true)}
                         >
                           <Text style={{ color: form.jk ? "#000" : "#888" }}>
-                          {form.jk
-                            ? form.jk === "L"
-                              ? "Laki-laki"
-                              : "Perempuan"
-                            : item.placeholder}
+                            {form.jk
+                              ? form.jk === "L"
+                                ? "Laki-laki"
+                                : "Perempuan"
+                              : item.placeholder}
                           </Text>
                         </TouchableOpacity>
                       </View>
@@ -456,22 +568,24 @@ const formFields: FormField[] = [
                     return (
                       <View>
                         <Text style={styles.label}>{item.label}</Text>
-                  
+
                         <TouchableOpacity
                           style={styles.input}
                           onPress={() => setShowStatus(true)}
                         >
-                         <Text style={{ color: form.status ? "#000" : "#888" }}>
-                          {form.status
-                            ? form.status === 1
-                              ? "Kawin"
-                              : form.status === 2
-                              ? "Belum Kawin"
-                              : form.status === 3
-                              ? "Janda"
-                              : "Duda"
-                            : item.placeholder}
-                        </Text>
+                          <Text
+                            style={{ color: form.status ? "#000" : "#888" }}
+                          >
+                            {form.status
+                              ? form.status === 1
+                                ? "Kawin"
+                                : form.status === 2
+                                  ? "Belum Kawin"
+                                  : form.status === 3
+                                    ? "Janda"
+                                    : "Duda"
+                              : item.placeholder}
+                          </Text>
                         </TouchableOpacity>
                       </View>
                     );
@@ -482,28 +596,17 @@ const formFields: FormField[] = [
                     return (
                       <View>
                         <Text style={styles.label}>{item.label}</Text>
-                  
+
                         <TouchableOpacity
                           style={styles.input}
                           onPress={() => setShowSuku(true)}
                         >
-                         <Text style={{ color: form.suku ? "#000" : "#888" }}>
-                          {form.suku
-                            ? form.suku === 1
-                              ? "Jawa"
-                              : form.suku === 2
-                              ? "Madura"
-                              : form.suku === 3
-                              ? "Batak"
-                              : form.suku === 4
-                              ? "Cina"
-                              : form.suku === 5
-                              ? "Sunda"
-                              : form.suku === 6
-                              ? "Tionghoa"
-                              : "Lainnya"
-                            : item.placeholder}
-                        </Text>
+                          <Text style={{ color: form.suku ? "#000" : "#888" }}>
+                            {form.suku
+                              ? sukuList.find((x) => x.id === form.suku)
+                                  ?.suku || item.placeholder
+                              : item.placeholder}
+                          </Text>
                         </TouchableOpacity>
                       </View>
                     );
@@ -514,26 +617,17 @@ const formFields: FormField[] = [
                     return (
                       <View>
                         <Text style={styles.label}>{item.label}</Text>
-                  
+
                         <TouchableOpacity
                           style={styles.input}
                           onPress={() => setShowAgama(true)}
                         >
-                         <Text style={{ color: form.agama ? "#000" : "#888" }}>
-                          {form.agama
-                            ? form.agama === 1
-                              ? "Islam"
-                              : form.agama === 2
-                              ? "Kristen"
-                              : form.agama === 3
-                              ? "Katolik"
-                              : form.agama === 4
-                              ? "Hindu"
-                              : form.agama === 5
-                              ? "Budha"                             
-                              : "Lain"
-                            : item.placeholder}
-                        </Text>
+                          <Text style={{ color: form.agama ? "#000" : "#888" }}>
+                            {form.agama
+                              ? agamaList.find((x) => x.id === form.agama)
+                                  ?.agama || item.placeholder
+                              : item.placeholder}
+                          </Text>
                         </TouchableOpacity>
                       </View>
                     );
@@ -544,39 +638,24 @@ const formFields: FormField[] = [
                     return (
                       <View>
                         <Text style={styles.label}>{item.label}</Text>
-                  
+
                         <TouchableOpacity
                           style={styles.input}
                           onPress={() => setShowPendidikan(true)}
                         >
-                         <Text style={{ color: form.pendidikan ? "#000" : "#888" }}>
-                          {form.pendidikan
-                            ? form.pendidikan === 1
-                              ? "SD"
-                              : form.pendidikan === 2
-                              ? "SMP"
-                              : form.pendidikan === 3
-                              ? "SMA/SMK"
-                              : form.pendidikan === 4
-                              ? "D1"
-                              : form.pendidikan === 5
-                              ? "D2"
-                              : form.pendidikan === 6
-                              ? "D3"
-                              : form.pendidikan === 7
-                              ? "D4"
-                              : form.pendidikan === 8
-                              ? "S1"
-                              : form.pendidikan === 9
-                              ? "S2"
-                              : "S3"
-                            : item.placeholder}
-                        </Text>
+                          <Text
+                            style={{ color: form.pendidikan ? "#000" : "#888" }}
+                          >
+                            {form.pendidikan
+                              ? pendidikanList.find(
+                                  (x) => x.id === form.pendidikan,
+                                )?.edu || item.placeholder
+                              : item.placeholder}
+                          </Text>
                         </TouchableOpacity>
                       </View>
                     );
                   }
-
 
                   // DEFAULT INPUT
                   return (
@@ -618,8 +697,154 @@ const formFields: FormField[] = [
               )}
             </View>
           </View>
+          {/*  Modal Kecamatan */}
+          {showKecamatan && (
+            <Pressable
+              style={styles.dropdownOverlay}
+              onPress={() => setShowKecamatan(false)}
+            >
+              <Pressable
+                style={styles.dropdownModal}
+                onPress={(e) => e.stopPropagation()}
+              >
+                <View style={styles.dropdownScrollWrapper}>
+                  <Animated.ScrollView
+                    style={styles.dropdownScroll}
+                    showsVerticalScrollIndicator={false}
+                    nestedScrollEnabled={true}
+                    scrollEventThrottle={16}
+                    onLayout={(e) =>
+                      setDropdownHeight(e.nativeEvent.layout.height)
+                    }
+                    onContentSizeChange={(_, h) => setDropdownContentHeight(h)}
+                    onScroll={Animated.event(
+                      [
+                        {
+                          nativeEvent: {
+                            contentOffset: { y: dropdownScrollY },
+                          },
+                        },
+                      ],
+                      { useNativeDriver: false },
+                    )}
+                  >
+                    {kecamatanList.map((item) => (
+                      <TouchableOpacity
+                        key={item.id}
+                        style={styles.dropdownItem}
+                        onPress={() => {
+                          setForm((prev) => ({
+                            ...prev,
+                            kecamatan: item.kecamatan,
+                            kelurahan: "",
+                          }));
 
-          // modal Goldar      
+                          setSelectedCamatId(item.id);
+                          setShowKecamatan(false);
+                          loadKelurahan(item.id);
+
+                          setTimeout(() => {
+                            setShowKelurahan(true);
+                          }, 200);
+                        }}
+                      >
+                        <Text style={{ fontSize: 16 }}>{item.kecamatan}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </Animated.ScrollView>
+
+                  {dropdownIndicatorHeight > 0 && (
+                    <Animated.View
+                      style={[
+                        styles.dropdownCustomScrollbar,
+                        {
+                          height: dropdownIndicatorHeight,
+                          transform: [
+                            { translateY: dropdownIndicatorTranslateY },
+                          ],
+                        },
+                      ]}
+                    />
+                  )}
+                </View>
+
+                <TouchableOpacity onPress={() => setShowKecamatan(false)}>
+                  <Text style={styles.cancelText}>Batal</Text>
+                </TouchableOpacity>
+              </Pressable>
+            </Pressable>
+          )}
+          {/*  Modal Kelurahan */}
+          {showKelurahan && (
+            <Pressable
+              style={styles.dropdownOverlay}
+              onPress={() => setShowKelurahan(false)}
+            >
+              <Pressable
+                style={styles.dropdownModal}
+                onPress={(e) => e.stopPropagation()}
+              >
+                <View style={styles.dropdownScrollWrapper}>
+                  <Animated.ScrollView
+                    style={styles.dropdownScroll}
+                    showsVerticalScrollIndicator={false}
+                    nestedScrollEnabled={true}
+                    scrollEventThrottle={16}
+                    onLayout={(e) =>
+                      setDropdownHeight(e.nativeEvent.layout.height)
+                    }
+                    onContentSizeChange={(_, h) => setDropdownContentHeight(h)}
+                    onScroll={Animated.event(
+                      [
+                        {
+                          nativeEvent: {
+                            contentOffset: { y: dropdownScrollY },
+                          },
+                        },
+                      ],
+                      { useNativeDriver: false },
+                    )}
+                  >
+                    {kelurahanList.map((item) => (
+                      <TouchableOpacity
+                        key={item.id}
+                        style={styles.dropdownItem}
+                        onPress={() => {
+                          setForm((prev) => ({
+                            ...prev,
+                            kelurahan: item.lurah,
+                          }));
+
+                          setShowKelurahan(false);
+                        }}
+                      >
+                        <Text style={{ fontSize: 16 }}>{item.lurah}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </Animated.ScrollView>
+
+                  {dropdownIndicatorHeight > 0 && (
+                    <Animated.View
+                      style={[
+                        styles.dropdownCustomScrollbar,
+                        {
+                          height: dropdownIndicatorHeight,
+                          transform: [
+                            { translateY: dropdownIndicatorTranslateY },
+                          ],
+                        },
+                      ]}
+                    />
+                  )}
+                </View>
+
+                <TouchableOpacity onPress={() => setShowKelurahan(false)}>
+                  <Text style={styles.cancelText}>Batal</Text>
+                </TouchableOpacity>
+              </Pressable>
+            </Pressable>
+          )}
+          {/*  Modal Goldar */}
           {showGoldar && (
             <Pressable
               style={styles.dropdownOverlay}
@@ -636,15 +861,15 @@ const formFields: FormField[] = [
                     onPress={() => {
                       setForm((prev) => ({ ...prev, goldar: item }));
                       setShowGoldar(false);
-                    
+
                       setTimeout(() => {
                         setShowJK(true);
                       }, 200);
                     }}
                   >
-                   <Text style={{ fontSize: 16, textAlign: "left" }}>
-                {`Gol ${item}`}
-              </Text>
+                    <Text style={{ fontSize: 16, textAlign: "left" }}>
+                      {`Gol ${item}`}
+                    </Text>
                   </TouchableOpacity>
                 ))}
 
@@ -654,48 +879,43 @@ const formFields: FormField[] = [
               </Pressable>
             </Pressable>
           )}
-
-          // modal JK
+          {/*  Modal JK */}
           {showJK && (
-          <Pressable
-            style={styles.dropdownOverlay}
-            onPress={() => setShowJK(false)}
-          >
             <Pressable
-              style={styles.dropdownModal}
-              onPress={(e) => e.stopPropagation()}
+              style={styles.dropdownOverlay}
+              onPress={() => setShowJK(false)}
             >
-              {[
-                { label: "Laki-laki", value: "L" },
-                { label: "Perempuan", value: "P" },
-              ].map((item) => (
-                <TouchableOpacity
-                  key={item.value}
-                  style={styles.dropdownItem}
-               
-                  onPress={() => {
-                    setForm((prev) => ({ ...prev, jk: item.value }));
-                    setShowJK(false);
-                                     
-                    setTimeout(() => {
-                      setShowStatus(true);
-                    }, 200);
-                  }}
-                >
-                  <Text style={{ fontSize: 16 }}>
-                    {item.label}
-                  </Text>
+              <Pressable
+                style={styles.dropdownModal}
+                onPress={(e) => e.stopPropagation()}
+              >
+                {[
+                  { label: "Laki-laki", value: "L" },
+                  { label: "Perempuan", value: "P" },
+                ].map((item) => (
+                  <TouchableOpacity
+                    key={item.value}
+                    style={styles.dropdownItem}
+                    onPress={() => {
+                      setForm((prev) => ({ ...prev, jk: item.value }));
+                      setShowJK(false);
+
+                      setTimeout(() => {
+                        setShowStatus(true);
+                      }, 200);
+                    }}
+                  >
+                    <Text style={{ fontSize: 16 }}>{item.label}</Text>
+                  </TouchableOpacity>
+                ))}
+
+                <TouchableOpacity onPress={() => setShowJK(false)}>
+                  <Text style={styles.cancelText}>Batal</Text>
                 </TouchableOpacity>
-              ))}
-
-              <TouchableOpacity onPress={() => setShowJK(false)}>
-                <Text style={styles.cancelText}>Batal</Text>
-              </TouchableOpacity>
+              </Pressable>
             </Pressable>
-          </Pressable>
-          )}    
-
-          // modal status
+          )}
+          {/*  Modal status */}
           {showStatus && (
             <Pressable
               style={styles.dropdownOverlay}
@@ -717,15 +937,13 @@ const formFields: FormField[] = [
                     onPress={() => {
                       setForm((prev) => ({ ...prev, status: item.value }));
                       setShowStatus(false);
-                                          
+
                       setTimeout(() => {
                         setShowSuku(true);
                       }, 200);
                     }}
                   >
-                    <Text style={{ fontSize: 16 }}>
-                      {item.label}
-                    </Text>
+                    <Text style={{ fontSize: 16 }}>{item.label}</Text>
                   </TouchableOpacity>
                 ))}
 
@@ -734,9 +952,8 @@ const formFields: FormField[] = [
                 </TouchableOpacity>
               </Pressable>
             </Pressable>
-          )}  
-
-          // modal suku
+          )}
+          {/*  Modal suku */}
           {showSuku && (
             <Pressable
               style={styles.dropdownOverlay}
@@ -746,128 +963,87 @@ const formFields: FormField[] = [
                 style={styles.dropdownModal}
                 onPress={(e) => e.stopPropagation()}
               >
-                {[
-                  { label: "Jawa", value: 1 },
-                  { label: "Madura", value: 2 },
-                  { label: "Batak", value: 3 },
-                  { label: "Cina", value: 4 },
-                  { label: "Sunda", value: 5 },
-                  { label: "Tionghoa", value: 6 },
-                  { label: "Lainnya", value: 7 },
-                ].map((item) => (
-                  <TouchableOpacity
-                    key={item.value}
-                    style={styles.dropdownItem}                  
-                    onPress={() => {
-                      setForm((prev) => ({ ...prev, suku: item.value }));
-                      setShowSuku(false);
-                                          
-                      setTimeout(() => {
-                        setShowAgama(true);
-                      }, 200);
-                    }}
-                  >
-                    <Text style={{ fontSize: 16 }}>
-                      {item.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                <ScrollView style={{ maxHeight: 400 }}>
+                  {sukuList.map((item) => (
+                    <TouchableOpacity
+                      key={item.id}
+                      style={styles.dropdownItem}
+                      onPress={() => {
+                        setForm((prev) => ({ ...prev, suku: item.id }));
+                        setShowSuku(false);
+
+                        setTimeout(() => setShowAgama(true), 200);
+                      }}
+                    >
+                      <Text style={{ fontSize: 16 }}>{item.suku}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
 
                 <TouchableOpacity onPress={() => setShowSuku(false)}>
                   <Text style={styles.cancelText}>Batal</Text>
                 </TouchableOpacity>
               </Pressable>
             </Pressable>
-          )}   
-
-          // modal Agama
+          )}
+          {/*  Modal Agama */}
           {showAgama && (
             <Pressable
               style={styles.dropdownOverlay}
               onPress={() => setShowAgama(false)}
             >
-              <Pressable
-                style={styles.dropdownModal}
-                onPress={(e) => e.stopPropagation()}
-              >
-                {[
-                  { label: "Islam", value: 1 },
-                  { label: "Kristen", value: 2 },
-                  { label: "Katolik", value: 3 },
-                  { label: "Hindu", value: 4 },
-                  { label: "Budha", value: 5 },                  
-                  { label: "Lain", value: 6 },
-                ].map((item) => (
-                  <TouchableOpacity
-                    key={item.value}
-                    style={styles.dropdownItem}                 
-                    onPress={() => {
-                      setForm((prev) => ({ ...prev, agama: item.value }));
-                      setShowAgama(false);
-                                          
-                      setTimeout(() => {
-                        setShowPendidikan(true);
-                      }, 200);
-                    }}
-                  >
-                    <Text style={{ fontSize: 16 }}>
-                      {item.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+              <Pressable style={styles.dropdownModal}>
+                <ScrollView style={{ maxHeight: 400 }}>
+                  {agamaList.map((item) => (
+                    <TouchableOpacity
+                      key={item.id}
+                      style={styles.dropdownItem}
+                      onPress={() => {
+                        setForm((prev) => ({ ...prev, agama: item.id }));
+                        setShowAgama(false);
+
+                        setTimeout(() => setShowPendidikan(true), 200);
+                      }}
+                    >
+                      <Text style={{ fontSize: 16 }}>{item.agama}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
 
                 <TouchableOpacity onPress={() => setShowAgama(false)}>
                   <Text style={styles.cancelText}>Batal</Text>
                 </TouchableOpacity>
               </Pressable>
             </Pressable>
-          )}           
-
-
-          // modal Pendidikan
+          )}
+          {/*  Modal Pendidikan */}
           {showPendidikan && (
             <Pressable
               style={styles.dropdownOverlay}
               onPress={() => setShowPendidikan(false)}
             >
-              <Pressable
-                style={styles.dropdownModal}
-                onPress={(e) => e.stopPropagation()}
-              >
-                {[
-                  { label: "SD", value: 1 },
-                  { label: "SMP", value: 2 },
-                  { label: "SMA/SMK", value: 3 },
-                  { label: "D1", value: 4 },
-                  { label: "D2", value: 5 },
-                  { label: "D3", value: 6 },
-                  { label: "D4", value: 7 },
-                  { label: "S1", value: 8 },
-                  { label: "S2", value: 9 },
-                  { label: "S3", value: 10 },
-                ].map((item) => (
-                  <TouchableOpacity
-                    key={item.value}
-                    style={styles.dropdownItem}
-                    onPress={() => {
-                      setForm({ ...form, pendidikan: item.value });
-                      setShowPendidikan(false);
-                    }}
-                  >
-                    <Text style={{ fontSize: 16 }}>
-                      {item.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+              <Pressable style={styles.dropdownModal}>
+                <ScrollView style={{ maxHeight: 400 }}>
+                  {pendidikanList.map((item) => (
+                    <TouchableOpacity
+                      key={item.id}
+                      style={styles.dropdownItem}
+                      onPress={() => {
+                        setForm((prev) => ({ ...prev, pendidikan: item.id }));
+                        setShowPendidikan(false);
+                      }}
+                    >
+                      <Text style={{ fontSize: 16 }}>{item.edu}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
 
                 <TouchableOpacity onPress={() => setShowPendidikan(false)}>
                   <Text style={styles.cancelText}>Batal</Text>
                 </TouchableOpacity>
               </Pressable>
             </Pressable>
-          )}           
-                    
-
+          )}
         </View>
       </Modal>
     </View>
@@ -1081,7 +1257,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     justifyContent: "center",
   },
-  
+
   inputText: {
     fontSize: 14,
     color: "#000",
@@ -1127,13 +1303,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  dropdownModal: {
-    width: "80%",
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 10,
-  },
-
   dropdownItem: {
     paddingVertical: 12,
     alignItems: "center",
@@ -1146,5 +1315,32 @@ const styles = StyleSheet.create({
     marginTop: 10,
     color: "red",
     fontWeight: "600",
+  },
+
+  dropdownModal: {
+    width: "85%",
+    maxHeight: "70%",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 10,
+    elevation: 6,
+  },
+
+  dropdownScrollWrapper: {
+    maxHeight: 400,
+    position: "relative",
+  },
+
+  dropdownScroll: {
+    maxHeight: 400,
+  },
+
+  dropdownCustomScrollbar: {
+    position: "absolute",
+    right: 2,
+    top: 0,
+    width: 5,
+    borderRadius: 10,
+    backgroundColor: "#087987",
   },
 });
