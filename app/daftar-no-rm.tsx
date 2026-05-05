@@ -54,7 +54,7 @@ export default function PendaftaranRM() {
       const googleId = await SecureStore.getItemAsync("google_id");
 
       const res = await fetch(
-        `http://app.rsabojonegoro.com:5000/his/reg/regpxol/userid?userid=${googleId}`,
+        `http://app.rsabojonegoro.com:5000/his/reg/regpxol/userid?userid=${googleId}`
       );
 
       const json = await res.json();
@@ -71,7 +71,33 @@ export default function PendaftaranRM() {
     loadData();
   }, []);
 
-  const formFields = [
+  type FormKey =
+  | "nik"
+  | "nojkn"
+  | "nama"
+  | "kecamatan"
+  | "kelurahan"
+  | "alamat"
+  | "tlahir"
+  | "telepon"
+  | "pekerjaan"
+  | "suamiistri"
+  | "ayah"
+  | "pekerjaan_ayah"
+  | "goldar"
+  | "jk"
+  | "status"
+  | "suku"
+  | "agama"
+  | "pendidikan";
+
+type FormField = {
+  key: FormKey;
+  label: string;
+  placeholder: string;
+};
+
+const formFields: FormField[] = [
     { key: "nik", label: "NIK", placeholder: "Masukkan NIK" },
     { key: "nojkn", label: "Nomor JKN", placeholder: "Masukkan nomor JKN" },
     { key: "nama", label: "Nama", placeholder: "Masukkan nama lengkap" },
@@ -98,7 +124,9 @@ export default function PendaftaranRM() {
       label: "Pendidikan",
       placeholder: "Pilih pendidikan terakhir",
     },
+    
   ];
+  
 
   const scrollY = React.useRef(new Animated.Value(0)).current;
   const [contentHeight, setContentHeight] = useState(1);
@@ -132,16 +160,16 @@ export default function PendaftaranRM() {
     pekerjaan_ayah: "",
     goldar: "",
     jk: "",
-    status: "",
-    suku: "",
-    agama: "",
-    pendidikan: "",
+    status: null as number | null,
+    suku: null as number | null,
+    agama: null as number | null,
+    pendidikan: null as number | null,
   });
 
   const handleSubmit = async () => {
     try {
       const googleId = await SecureStore.getItemAsync("google_id");
-
+  
       const payload = {
         nama: form.nama,
         nik: form.nik,
@@ -150,31 +178,69 @@ export default function PendaftaranRM() {
         kel: form.kelurahan,
         kec: form.kecamatan,
         tlpn: form.telepon,
+        tlahir: form.tlahir,
         goldr: form.goldar,
         jk: form.jk,
         job: form.pekerjaan,
+        suamiistri: form.suamiistri,
         ayahibu: form.ayah,
+        job_ayah: form.pekerjaan_ayah,
+        status: form.status,
+        suku: form.suku,
+        agama: form.agama,
+        pend: form.pendidikan, // ⬅️ penting!
         userid: googleId,
       };
+  
+      console.log("PAYLOAD FIX:", payload);
+      
+      if (!form.nama || form.nama.length > 30) {
+        alert("Nama maksimal 30 karakter");
+        return;
+      }
+      
+      if (!/^\d+$/.test(form.nik)) {
+        alert("NIK harus angka");
+        return;
+      }
+      
+      if (!/^\d+$/.test(form.nojkn)) {
+        alert("JKN harus angka");
+        return;
+      }
 
-      console.log("PAYLOAD:", payload);
-
-      // contoh POST
-      await fetch("http://app.rsabojonegoro.com:5000/his/reg/regpxol", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
+      const res = await fetch(
+        "http://app.rsabojonegoro.com:5000/his/reg/regpxol",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+  
+      const text = await res.text();
+  
+      if (!res.ok) {
+        throw new Error(text);
+      }
+  
       alert("Berhasil daftar RM");
       setShowForm(false);
-    } catch (err) {
-      console.log(err);
-      alert("Gagal daftar");
+      loadData();
+  
+    } catch (err: any) {
+      console.log("ERROR:", err.message);
+      alert(err.message);
     }
   };
+
+  const [showJK, setShowJK] = useState(false);
+  const [showStatus, setShowStatus] = useState(false);
+  const [showSuku, setShowSuku] = useState(false);
+  const [showAgama, setShowAgama] = useState(false);
+  const [showPendidikan, setShowPendidikan] = useState(false);
 
   return (
     <View style={styles.container}>
@@ -337,7 +403,7 @@ export default function PendaftaranRM() {
                 onContentSizeChange={(_, h) => setContentHeight(h)}
                 onScroll={Animated.event(
                   [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                  { useNativeDriver: false },
+                  { useNativeDriver: false }
                 )}
                 scrollEventThrottle={16}
                 renderItem={({ item }) => {
@@ -354,12 +420,163 @@ export default function PendaftaranRM() {
                           <Text
                             style={{ color: form.goldar ? "#000" : "#888" }}
                           >
-                            {form.goldar || item.placeholder}
+                            {form.goldar
+                              ? `Gol ${form.goldar}`
+                              : item.placeholder}
                           </Text>
                         </TouchableOpacity>
                       </View>
                     );
                   }
+
+                  //Kelamin
+                  if (item.key === "jk") {
+                    return (
+                      <View>
+                        <Text style={styles.label}>{item.label}</Text>
+                  
+                        <TouchableOpacity
+                          style={styles.input}
+                          onPress={() => setShowJK(true)}
+                        >
+                          <Text style={{ color: form.jk ? "#000" : "#888" }}>
+                          {form.jk
+                            ? form.jk === "L"
+                              ? "Laki-laki"
+                              : "Perempuan"
+                            : item.placeholder}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  }
+
+                  //Status
+                  if (item.key === "status") {
+                    return (
+                      <View>
+                        <Text style={styles.label}>{item.label}</Text>
+                  
+                        <TouchableOpacity
+                          style={styles.input}
+                          onPress={() => setShowStatus(true)}
+                        >
+                         <Text style={{ color: form.status ? "#000" : "#888" }}>
+                          {form.status
+                            ? form.status === 1
+                              ? "Kawin"
+                              : form.status === 2
+                              ? "Belum Kawin"
+                              : form.status === 3
+                              ? "Janda"
+                              : "Duda"
+                            : item.placeholder}
+                        </Text>
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  }
+
+                  //Suku
+                  if (item.key === "suku") {
+                    return (
+                      <View>
+                        <Text style={styles.label}>{item.label}</Text>
+                  
+                        <TouchableOpacity
+                          style={styles.input}
+                          onPress={() => setShowSuku(true)}
+                        >
+                         <Text style={{ color: form.suku ? "#000" : "#888" }}>
+                          {form.suku
+                            ? form.suku === 1
+                              ? "Jawa"
+                              : form.suku === 2
+                              ? "Madura"
+                              : form.suku === 3
+                              ? "Batak"
+                              : form.suku === 4
+                              ? "Cina"
+                              : form.suku === 5
+                              ? "Sunda"
+                              : form.suku === 6
+                              ? "Tionghoa"
+                              : "Lainnya"
+                            : item.placeholder}
+                        </Text>
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  }
+
+                  // Agama
+                  if (item.key === "agama") {
+                    return (
+                      <View>
+                        <Text style={styles.label}>{item.label}</Text>
+                  
+                        <TouchableOpacity
+                          style={styles.input}
+                          onPress={() => setShowAgama(true)}
+                        >
+                         <Text style={{ color: form.agama ? "#000" : "#888" }}>
+                          {form.agama
+                            ? form.agama === 1
+                              ? "Islam"
+                              : form.agama === 2
+                              ? "Kristen"
+                              : form.agama === 3
+                              ? "Katolik"
+                              : form.agama === 4
+                              ? "Hindu"
+                              : form.agama === 5
+                              ? "Budha"                             
+                              : "Lain"
+                            : item.placeholder}
+                        </Text>
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  }
+
+                  //Pendidikan
+                  if (item.key === "pendidikan") {
+                    return (
+                      <View>
+                        <Text style={styles.label}>{item.label}</Text>
+                  
+                        <TouchableOpacity
+                          style={styles.input}
+                          onPress={() => setShowPendidikan(true)}
+                        >
+                         <Text style={{ color: form.pendidikan ? "#000" : "#888" }}>
+                          {form.pendidikan
+                            ? form.pendidikan === 1
+                              ? "SD"
+                              : form.pendidikan === 2
+                              ? "SMP"
+                              : form.pendidikan === 3
+                              ? "SMA/SMK"
+                              : form.pendidikan === 4
+                              ? "D1"
+                              : form.pendidikan === 5
+                              ? "D2"
+                              : form.pendidikan === 6
+                              ? "D3"
+                              : form.pendidikan === 7
+                              ? "D4"
+                              : form.pendidikan === 8
+                              ? "S1"
+                              : form.pendidikan === 9
+                              ? "S2"
+                              : "S3"
+                            : item.placeholder}
+                        </Text>
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  }
+
 
                   // DEFAULT INPUT
                   return (
@@ -402,6 +619,7 @@ export default function PendaftaranRM() {
             </View>
           </View>
 
+          // modal Goldar      
           {showGoldar && (
             <Pressable
               style={styles.dropdownOverlay}
@@ -416,11 +634,17 @@ export default function PendaftaranRM() {
                     key={item}
                     style={styles.dropdownItem}
                     onPress={() => {
-                      setForm({ ...form, goldar: item });
+                      setForm((prev) => ({ ...prev, goldar: item }));
                       setShowGoldar(false);
+                    
+                      setTimeout(() => {
+                        setShowJK(true);
+                      }, 200);
                     }}
                   >
-                    <Text style={{ fontSize: 16 }}>{item}</Text>
+                   <Text style={{ fontSize: 16, textAlign: "left" }}>
+                {`Gol ${item}`}
+              </Text>
                   </TouchableOpacity>
                 ))}
 
@@ -430,6 +654,220 @@ export default function PendaftaranRM() {
               </Pressable>
             </Pressable>
           )}
+
+          // modal JK
+          {showJK && (
+          <Pressable
+            style={styles.dropdownOverlay}
+            onPress={() => setShowJK(false)}
+          >
+            <Pressable
+              style={styles.dropdownModal}
+              onPress={(e) => e.stopPropagation()}
+            >
+              {[
+                { label: "Laki-laki", value: "L" },
+                { label: "Perempuan", value: "P" },
+              ].map((item) => (
+                <TouchableOpacity
+                  key={item.value}
+                  style={styles.dropdownItem}
+               
+                  onPress={() => {
+                    setForm((prev) => ({ ...prev, jk: item.value }));
+                    setShowJK(false);
+                                     
+                    setTimeout(() => {
+                      setShowStatus(true);
+                    }, 200);
+                  }}
+                >
+                  <Text style={{ fontSize: 16 }}>
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+
+              <TouchableOpacity onPress={() => setShowJK(false)}>
+                <Text style={styles.cancelText}>Batal</Text>
+              </TouchableOpacity>
+            </Pressable>
+          </Pressable>
+          )}    
+
+          // modal status
+          {showStatus && (
+            <Pressable
+              style={styles.dropdownOverlay}
+              onPress={() => setShowStatus(false)}
+            >
+              <Pressable
+                style={styles.dropdownModal}
+                onPress={(e) => e.stopPropagation()}
+              >
+                {[
+                  { label: "Kawin", value: 1 },
+                  { label: "Belum Kawin", value: 2 },
+                  { label: "Janda", value: 3 },
+                  { label: "Duda", value: 4 },
+                ].map((item) => (
+                  <TouchableOpacity
+                    key={item.value}
+                    style={styles.dropdownItem}
+                    onPress={() => {
+                      setForm((prev) => ({ ...prev, status: item.value }));
+                      setShowStatus(false);
+                                          
+                      setTimeout(() => {
+                        setShowSuku(true);
+                      }, 200);
+                    }}
+                  >
+                    <Text style={{ fontSize: 16 }}>
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+
+                <TouchableOpacity onPress={() => setShowStatus(false)}>
+                  <Text style={styles.cancelText}>Batal</Text>
+                </TouchableOpacity>
+              </Pressable>
+            </Pressable>
+          )}  
+
+          // modal suku
+          {showSuku && (
+            <Pressable
+              style={styles.dropdownOverlay}
+              onPress={() => setShowSuku(false)}
+            >
+              <Pressable
+                style={styles.dropdownModal}
+                onPress={(e) => e.stopPropagation()}
+              >
+                {[
+                  { label: "Jawa", value: 1 },
+                  { label: "Madura", value: 2 },
+                  { label: "Batak", value: 3 },
+                  { label: "Cina", value: 4 },
+                  { label: "Sunda", value: 5 },
+                  { label: "Tionghoa", value: 6 },
+                  { label: "Lainnya", value: 7 },
+                ].map((item) => (
+                  <TouchableOpacity
+                    key={item.value}
+                    style={styles.dropdownItem}                  
+                    onPress={() => {
+                      setForm((prev) => ({ ...prev, suku: item.value }));
+                      setShowSuku(false);
+                                          
+                      setTimeout(() => {
+                        setShowAgama(true);
+                      }, 200);
+                    }}
+                  >
+                    <Text style={{ fontSize: 16 }}>
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+
+                <TouchableOpacity onPress={() => setShowSuku(false)}>
+                  <Text style={styles.cancelText}>Batal</Text>
+                </TouchableOpacity>
+              </Pressable>
+            </Pressable>
+          )}   
+
+          // modal Agama
+          {showAgama && (
+            <Pressable
+              style={styles.dropdownOverlay}
+              onPress={() => setShowAgama(false)}
+            >
+              <Pressable
+                style={styles.dropdownModal}
+                onPress={(e) => e.stopPropagation()}
+              >
+                {[
+                  { label: "Islam", value: 1 },
+                  { label: "Kristen", value: 2 },
+                  { label: "Katolik", value: 3 },
+                  { label: "Hindu", value: 4 },
+                  { label: "Budha", value: 5 },                  
+                  { label: "Lain", value: 6 },
+                ].map((item) => (
+                  <TouchableOpacity
+                    key={item.value}
+                    style={styles.dropdownItem}                 
+                    onPress={() => {
+                      setForm((prev) => ({ ...prev, agama: item.value }));
+                      setShowAgama(false);
+                                          
+                      setTimeout(() => {
+                        setShowPendidikan(true);
+                      }, 200);
+                    }}
+                  >
+                    <Text style={{ fontSize: 16 }}>
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+
+                <TouchableOpacity onPress={() => setShowAgama(false)}>
+                  <Text style={styles.cancelText}>Batal</Text>
+                </TouchableOpacity>
+              </Pressable>
+            </Pressable>
+          )}           
+
+
+          // modal Pendidikan
+          {showPendidikan && (
+            <Pressable
+              style={styles.dropdownOverlay}
+              onPress={() => setShowPendidikan(false)}
+            >
+              <Pressable
+                style={styles.dropdownModal}
+                onPress={(e) => e.stopPropagation()}
+              >
+                {[
+                  { label: "SD", value: 1 },
+                  { label: "SMP", value: 2 },
+                  { label: "SMA/SMK", value: 3 },
+                  { label: "D1", value: 4 },
+                  { label: "D2", value: 5 },
+                  { label: "D3", value: 6 },
+                  { label: "D4", value: 7 },
+                  { label: "S1", value: 8 },
+                  { label: "S2", value: 9 },
+                  { label: "S3", value: 10 },
+                ].map((item) => (
+                  <TouchableOpacity
+                    key={item.value}
+                    style={styles.dropdownItem}
+                    onPress={() => {
+                      setForm({ ...form, pendidikan: item.value });
+                      setShowPendidikan(false);
+                    }}
+                  >
+                    <Text style={{ fontSize: 16 }}>
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+
+                <TouchableOpacity onPress={() => setShowPendidikan(false)}>
+                  <Text style={styles.cancelText}>Batal</Text>
+                </TouchableOpacity>
+              </Pressable>
+            </Pressable>
+          )}           
+                    
+
         </View>
       </Modal>
     </View>
@@ -634,15 +1072,18 @@ const styles = StyleSheet.create({
     marginTop: 7,
     marginBottom: 3,
   },
-
   input: {
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 4,
     paddingHorizontal: 10,
     height: 36,
-    fontSize: 14,
     backgroundColor: "#fff",
+    justifyContent: "center",
+  },
+  
+  inputText: {
+    fontSize: 14,
     color: "#000",
   },
 
