@@ -224,14 +224,18 @@ export default function Index() {
                   Halo, {name || "User"}
                 </Text>
               </View>
-
-              <TouchableOpacity onPress={handleLogout}>
-                <MaterialCommunityIcons
-                  name="logout"
-                  size={26}
-                  color="#0A6A74"
-                />
-              </TouchableOpacity>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <TouchableOpacity
+                  style={{ marginRight: 0 }}
+                  onPress={() => router.push("/profile")}
+                >
+                  <MaterialCommunityIcons
+                    name="account-circle-outline"
+                    size={30}
+                    color="#0A6A74"
+                  />
+                </TouchableOpacity>
+              </View>
             </View>
 
             <View style={styles.heroWrapper}>

@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import React, { useEffect, useState } from "react";
 import {
@@ -11,8 +11,10 @@ import {
   Modal,
   StatusBar,
   StyleSheet,
-  Text, TextInput, TouchableOpacity,
-  View
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import logoRSA from "../assets/images/logorsa.png";
@@ -68,7 +70,8 @@ export default function PendaftaranScreen() {
   const [modalTanggalVisible, setModalTanggalVisible] = useState(false);
   const [modalJamVisible, setModalJamVisible] = useState(false);
   const [listJamPraktek, setListJamPraktek] = useState<JadwalPraktek[]>([]);
-  const [selectedJamPraktek, setSelectedJamPraktek] = useState<JadwalPraktek | null>(null);
+  const [selectedJamPraktek, setSelectedJamPraktek] =
+    useState<JadwalPraktek | null>(null);
   const [loadingJam, setLoadingJam] = useState(false);
   const [modalPasienVisible, setModalPasienVisible] = useState(false);
   const [noRM, setNoRM] = useState("");
@@ -81,6 +84,7 @@ export default function PendaftaranScreen() {
   const [googleId, setGoogleId] = useState("");
   const [modalSuksesVisible, setModalSuksesVisible] = useState(false);
   const [buktiDaftar, setBuktiDaftar] = useState<any>(null);
+  const params = useLocalSearchParams();
 
   const getSpecialist = async () => {
     try {
@@ -101,7 +105,7 @@ export default function PendaftaranScreen() {
       setListDokter([]);
 
       const response = await fetch(
-        `http://app.rsabojonegoro.com:5000/his/new/Specialist/sp?sp=${sp}`
+        `http://app.rsabojonegoro.com:5000/his/new/Specialist/sp?sp=${sp}`,
       );
 
       const json = await response.json();
@@ -164,7 +168,7 @@ export default function PendaftaranScreen() {
   const getKodeHari = (dateValue: string) => {
     const date = new Date(dateValue);
     const day = date.getDay();
-  
+
     // Minggu = 0, Senin = 1, Selasa = 2, dst
     return day;
   };
@@ -178,17 +182,17 @@ export default function PendaftaranScreen() {
     try {
       setLoadingJam(true);
       setListJamPraktek([]);
-  
+
       const hr = getKodeHari(tanggal);
-  
+
       const response = await fetch(
-        `http://app.rsabojonegoro.com:5000/his/reg/jadwaldokterV2/dh?dr=${drId}&hr=${hr}`
+        `http://app.rsabojonegoro.com:5000/his/reg/jadwaldokterV2/dh?dr=${drId}&hr=${hr}`,
       );
-  
+
       const json = await response.json();
-  
+
       const data = json?._embedded?.jadwalDokterPrakV2s || [];
-  
+
       setListJamPraktek(data);
     } catch (error) {
       console.log("Gagal ambil jadwal praktek:", error);
@@ -203,25 +207,23 @@ export default function PendaftaranScreen() {
       setRiwayatPasien(JSON.parse(saved));
     }
   };
-  
+
   const simpanPasienKeHp = async (pasien: Pasien) => {
     const saved = await AsyncStorage.getItem("RIWAYAT_PASIEN");
     const lama: Pasien[] = saved ? JSON.parse(saved) : [];
-  
+
     const sudahAda = lama.some((x) => x.patientid === pasien.patientid);
-  
-    const dataBaru = sudahAda
-      ? lama
-      : [pasien, ...lama];
-  
+
+    const dataBaru = sudahAda ? lama : [pasien, ...lama];
+
     await AsyncStorage.setItem("RIWAYAT_PASIEN", JSON.stringify(dataBaru));
     setRiwayatPasien(dataBaru);
   };
-  
+
   const cekPasien = async () => {
     try {
       setLoadingPasien(true);
-  
+
       const response = await fetch(
         "http://app.rsabojonegoro.com:5000/his/new/CekPxV2",
         {
@@ -233,30 +235,30 @@ export default function PendaftaranScreen() {
             patientid: noRM,
             date: convertTanggalApi(tglLahir),
           }),
-        }
+        },
       );
-  
+
       const json = await response.json();
-  
+
       if (json?.metadata?.code === 200) {
         const pasien = json.response;
-  
+
         setSelectedPasien(pasien);
         await simpanPasienKeHp(pasien);
-  
+
         setNoRM("");
         setTglLahir("");
         setModalPasienVisible(false);
       } else {
         setErrorMessage(
           json?.metadata?.message ||
-            "Nomor rekam medis atau tanggal lahir ada yang salah"
+            "Nomor rekam medis atau tanggal lahir ada yang salah",
         );
         setModalErrorVisible(true);
       }
     } catch (error) {
       console.log("Gagal cek pasien:", error);
-  
+
       setErrorMessage("Gagal terhubung ke server. Silakan coba lagi.");
       setModalErrorVisible(true);
     } finally {
@@ -266,62 +268,68 @@ export default function PendaftaranScreen() {
 
   const formatNoRM = (text: string) => {
     const cleaned = text.replace(/\D/g, "").slice(0, 6);
-  
+
     if (cleaned.length <= 2) return cleaned;
     if (cleaned.length <= 4)
       return `${cleaned.slice(0, 2)}.${cleaned.slice(2)}`;
-  
+
     return `${cleaned.slice(0, 2)}.${cleaned.slice(
       2,
-      4
+      4,
     )}.${cleaned.slice(4, 6)}`;
   };
-  
+
   const formatTanggal = (text: string) => {
     const cleaned = text.replace(/\D/g, "").slice(0, 8);
-  
+
     if (cleaned.length <= 2) return cleaned;
-  
+
     if (cleaned.length <= 4)
       return `${cleaned.slice(0, 2)}-${cleaned.slice(2)}`;
-  
+
     return `${cleaned.slice(0, 2)}-${cleaned.slice(
       2,
-      4
+      4,
     )}-${cleaned.slice(4, 8)}`;
   };
-  
+
   const convertTanggalApi = (tanggal: string) => {
     const parts = tanggal.split("-");
-  
+
     if (parts.length !== 3) return tanggal;
-  
+
     return `${parts[2]}-${parts[1]}-${parts[0]}`;
   };
 
   const daftarPasien = async () => {
-    if (!selectedKlinik || !selectedDokter || !selectedTanggal || !selectedJamPraktek || !selectedPasien) {
+    if (
+      !selectedKlinik ||
+      !selectedDokter ||
+      !selectedTanggal ||
+      !selectedJamPraktek ||
+      !selectedPasien
+    ) {
       setErrorMessage("Data pendaftaran belum lengkap");
       setModalErrorVisible(true);
       return;
     }
-  
+
     try {
       const payload = {
         userid: googleId,
         sublayanan: selectedKlinik?.name,
-        layanan: selectedKlinik?.category,      
-        tgl: selectedTanggal?.value,      
-        jampraktek: selectedJamPraktek?.prak,      
-        register: selectedPasien?.patientid,      
-        dokterid: selectedDokter?.id,      
-        ktp: null,      
-        buktitransfer: null,      
-        status: 0,      
-        norujukan: null,      
+        layanan: selectedKlinik?.category,
+        tgl: selectedTanggal?.value,
+        jampraktek: selectedJamPraktek?.prak,
+        register: selectedPasien?.patientid,
+        dokterid: selectedDokter?.id,
+        ktp: null,
+        buktitransfer: null,
+        status: 0,
+        norujukan: null,
         upx: selectedPasien?.upx,
       };
-  
+
       const response = await fetch(
         "http://app.rsabojonegoro.com:5000/his/about/newregV2",
         {
@@ -330,23 +338,28 @@ export default function PendaftaranScreen() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(payload),
-        }
+        },
       );
-  
+
       const json = await response.json();
-  
+
       if (json?.metadata?.code === 200) {
-        setBuktiDaftar(json.response);
+        const regId = json?.response?.id;
+
+        const reportResponse = await fetch(
+          `http://app.rsabojonegoro.com:5000/his/about/newreg/regid?id=${regId}`,
+        );
+
+        const reportJson = await reportResponse.json();
+
+        setBuktiDaftar(reportJson);
         setModalSuksesVisible(true);
       } else {
         setErrorMessage(
-          json?.metadata?.message ||
-            json?.message ||
-            "Pendaftaran gagal"
+          json?.metadata?.message || json?.message || "Pendaftaran gagal",
         );
         setModalErrorVisible(true);
       }
-      
     } catch (error) {
       console.log("Gagal daftar:", error);
       setErrorMessage("Gagal terhubung ke server pendaftaran");
@@ -356,11 +369,61 @@ export default function PendaftaranScreen() {
 
   const loadGoogleId = async () => {
     const savedGoogleId = await SecureStore.getItemAsync("google_id");
-  
+
     if (savedGoogleId) {
       setGoogleId(savedGoogleId);
     }
   };
+  useEffect(() => {
+    if (params.ulang !== "1") return;
+
+    if (params.patientid && params.patientname) {
+      setSelectedPasien({
+        id: String(params.patientid),
+        patientid: String(params.patientid),
+        name: String(params.patientname),
+        date: "",
+        upx: Number(params.upx || 0),
+      });
+    }
+
+    if (params.klinik) {
+      setSelectedKlinik({
+        id: Number(params.clinicId || 0),
+        name: String(params.klinik),
+        category: String(params.layanan || ""),
+        fotoOL: null,
+        layID: 0,
+        kdBPJS: null,
+      });
+    }
+
+    if (params.dokter) {
+      setSelectedDokter({
+        id: Number(params.dokterid || 0),
+        dokter: String(params.dokter),
+        spesialis: String(params.klinik || ""),
+        sp: Number(params.clinicId || 0),
+      });
+    }
+
+    if (params.bukaTanggal === "1") {
+      setTimeout(() => {
+        setModalTanggalVisible(true);
+      }, 500);
+    }
+  }, [
+    params.ulang,
+    params.patientid,
+    params.patientname,
+    params.upx,
+    params.klinik,
+    params.layanan,
+    params.dokter,
+    params.dokterid,
+    params.clinicId,
+    params.bukaTanggal,
+  ]);
 
   useEffect(() => {
     getSpecialist();
@@ -382,7 +445,6 @@ export default function PendaftaranScreen() {
 
         <Text style={styles.title}>Pendaftaran Rawat Jalan</Text>
         <Text style={styles.subtitle}>Untuk Pasien Umum dan Asuransi</Text>
-       
       </View>
 
       <View style={styles.content}>
@@ -436,7 +498,7 @@ export default function PendaftaranScreen() {
             }}
           />
 
-         <FormSelect
+          <FormSelect
             label="Pasien"
             placeholder={selectedPasien?.name || "Cek data pasien"}
             icon="person-outline"
@@ -455,93 +517,93 @@ export default function PendaftaranScreen() {
 
       {/*Modal Spesialis*/}
       <Modal visible={modalVisible} transparent animationType="fade">
-  <TouchableOpacity
-    style={styles.modalOverlay}
-    activeOpacity={1}
-    onPress={() => setModalVisible(false)}
-  >
-    <TouchableOpacity
-      activeOpacity={1}
-      style={styles.modalBox}
-      onPress={(e) => e.stopPropagation()}
-    >
-      <Text style={styles.modalTitle}>Pilih Spesialis</Text>
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setModalVisible(false)}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            style={styles.modalBox}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <Text style={styles.modalTitle}>Pilih Spesialis</Text>
 
-      {loadingKlinik ? (
-        <ActivityIndicator
-          size="large"
-          color="#0A7C86"
-          style={{ marginTop: 25 }}
-        />
-      ) : (
-        <FlatList
-          data={listKlinik}
-          keyExtractor={(item) => String(item.id)}
-          showsVerticalScrollIndicator={false}
-          style={{ maxHeight: 430 }}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.spesialisItem}
-              onPress={async () => {
-                setSelectedKlinik(item);
-                setSelectedDokter(null);
-                setSelectedTanggal(null);
-                setSelectedJamPraktek(null);
+            {loadingKlinik ? (
+              <ActivityIndicator
+                size="large"
+                color="#0A7C86"
+                style={{ marginTop: 25 }}
+              />
+            ) : (
+              <FlatList
+                data={listKlinik}
+                keyExtractor={(item) => String(item.id)}
+                showsVerticalScrollIndicator={false}
+                style={{ maxHeight: 430 }}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.spesialisItem}
+                    onPress={async () => {
+                      setSelectedKlinik(item);
+                      setSelectedDokter(null);
+                      setSelectedTanggal(null);
+                      setSelectedJamPraktek(null);
 
-                setModalVisible(false);
-                setModalDokterVisible(true);
+                      setModalVisible(false);
+                      setModalDokterVisible(true);
 
-                await getDokterBySpesialis(item.id);
-              }}
-            >
-              <View style={styles.iconCircle}>
-                {item.fotoOL ? (
-                  <Image
-                    source={{ uri: item.fotoOL }}
-                    style={styles.iconImage}
-                  />
-                ) : (
-                  <Ionicons
-                    name="medical-outline"
-                    size={22}
-                    color="#0A7C86"
-                  />
+                      await getDokterBySpesialis(item.id);
+                    }}
+                  >
+                    <View style={styles.iconCircle}>
+                      {item.fotoOL ? (
+                        <Image
+                          source={{ uri: item.fotoOL }}
+                          style={styles.iconImage}
+                        />
+                      ) : (
+                        <Ionicons
+                          name="medical-outline"
+                          size={22}
+                          color="#0A7C86"
+                        />
+                      )}
+                    </View>
+
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.spesialisText}>{item.name}</Text>
+                      <Text style={styles.spesialisCategory}>
+                        {item.category?.trim()}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
                 )}
-              </View>
+              />
+            )}
 
-              <View style={{ flex: 1 }}>
-                <Text style={styles.spesialisText}>{item.name}</Text>
-                <Text style={styles.spesialisCategory}>
-                  {item.category?.trim()}
-                </Text>
-              </View>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.closeButtonText}>Tutup</Text>
             </TouchableOpacity>
-          )}
-        />
-      )}
-
-      <TouchableOpacity
-        style={styles.closeButton}
-        onPress={() => setModalVisible(false)}
-      >
-        <Text style={styles.closeButtonText}>Tutup</Text>
-      </TouchableOpacity>
-    </TouchableOpacity>
-  </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
 
       {/*Modal Dokter*/}
       <Modal visible={modalDokterVisible} transparent animationType="fade">
-      <TouchableOpacity
-        style={styles.modalOverlay}
-        activeOpacity={1}
-        onPress={() => setModalDokterVisible(false)}
-      >
         <TouchableOpacity
+          style={styles.modalOverlay}
           activeOpacity={1}
-          style={styles.modalBox}
-          onPress={(e) => e.stopPropagation()}
+          onPress={() => setModalDokterVisible(false)}
         >
+          <TouchableOpacity
+            activeOpacity={1}
+            style={styles.modalBox}
+            onPress={(e) => e.stopPropagation()}
+          >
             <Text style={styles.modalTitle}>Pilih Dokter</Text>
 
             {loadingDokter ? (
@@ -566,9 +628,9 @@ export default function PendaftaranScreen() {
                     style={styles.spesialisItem}
                     onPress={() => {
                       setSelectedDokter(item);
-                    
+
                       setModalDokterVisible(false);
-                    
+
                       setTimeout(() => {
                         setModalTanggalVisible(true);
                       }, 300);
@@ -599,22 +661,22 @@ export default function PendaftaranScreen() {
             >
               <Text style={styles.closeButtonText}>Tutup</Text>
             </TouchableOpacity>
+          </TouchableOpacity>
         </TouchableOpacity>
-      </TouchableOpacity>
       </Modal>
 
       {/*Modal Tgl*/}
       <Modal visible={modalTanggalVisible} transparent animationType="fade">
-      <TouchableOpacity
-        style={styles.modalOverlay}
-        activeOpacity={1}
-        onPress={() => setModalTanggalVisible(false)}
-      >
         <TouchableOpacity
+          style={styles.modalOverlay}
           activeOpacity={1}
-          style={styles.modalBox}
-          onPress={(e) => e.stopPropagation()}
+          onPress={() => setModalTanggalVisible(false)}
         >
+          <TouchableOpacity
+            activeOpacity={1}
+            style={styles.modalBox}
+            onPress={(e) => e.stopPropagation()}
+          >
             <Text style={styles.modalTitle}>Pilih Tanggal</Text>
 
             <FlatList
@@ -626,7 +688,7 @@ export default function PendaftaranScreen() {
                   onPress={async () => {
                     setSelectedTanggal(item);
                     setModalTanggalVisible(false);
-                  
+
                     if (selectedDokter) {
                       setModalJamVisible(true);
                       await getJadwalPraktek(selectedDokter.id, item.value);
@@ -648,8 +710,8 @@ export default function PendaftaranScreen() {
             >
               <Text style={styles.closeButtonText}>Tutup</Text>
             </TouchableOpacity>
+          </TouchableOpacity>
         </TouchableOpacity>
-      </TouchableOpacity>
       </Modal>
 
       {/*Modal JamPrak*/}
@@ -663,7 +725,7 @@ export default function PendaftaranScreen() {
             activeOpacity={1}
             style={styles.modalJamBox}
             onPress={(e) => e.stopPropagation()}
-          >    
+          >
             <Text style={styles.jamModalTitle}>Pilih Jam Praktek</Text>
             {loadingJam ? (
               <ActivityIndicator size="large" color="#0A7C86" />
@@ -677,20 +739,17 @@ export default function PendaftaranScreen() {
                   </Text>
                 }
                 renderItem={({ item }) => {
-                  const namaShift =
-                    item.shift === "P"
-                      ? "Pagi"
-                      : "Sore";
-                
+                  const namaShift = item.shift === "P" ? "Pagi" : "Sore";
+
                   const statusText =
                     item.status === 1
                       ? "Libur"
                       : item.status === 2
-                      ? "Penuh"
-                      : item.status === 3
-                      ? "Tutup"
-                      : "Masuk";
-                
+                        ? "Penuh"
+                        : item.status === 3
+                          ? "Tutup"
+                          : "Masuk";
+
                   return (
                     <TouchableOpacity
                       style={styles.jamRowSingle}
@@ -698,12 +757,14 @@ export default function PendaftaranScreen() {
                       onPress={() => {
                         if (item.status === 4) {
                           setSelectedJamPraktek(item);
-                      
+
                           setModalJamVisible(false);
-                      
-                          setTimeout(() => {
-                            setModalPasienVisible(true);
-                          }, 300);
+
+                          if (params?.ulang !== "1") {
+                            setTimeout(() => {
+                              setModalPasienVisible(true);
+                            }, 300);
+                          }
                         }
                       }}
                     >
@@ -714,12 +775,10 @@ export default function PendaftaranScreen() {
                           size={24}
                           color="#0A7C86"
                         />
-                
-                        <Text style={styles.jamText}>
-                          {namaShift}
-                        </Text>
+
+                        <Text style={styles.jamText}>{namaShift}</Text>
                       </View>
-                
+
                       {/* KANAN */}
                       <View style={styles.jamRightInline}>
                         {item.status === 4 ? (
@@ -729,7 +788,7 @@ export default function PendaftaranScreen() {
                                 jumlah : {item.jml}
                               </Text>
                             </View>
-                
+
                             <View style={styles.badgeSisa}>
                               <Text style={styles.badgeText}>
                                 tersisa : {item.ready}
@@ -742,13 +801,11 @@ export default function PendaftaranScreen() {
                               item.status === 1
                                 ? styles.badgeLibur
                                 : item.status === 2
-                                ? styles.badgePenuh
-                                : styles.badgeTutup
+                                  ? styles.badgePenuh
+                                  : styles.badgeTutup
                             }
                           >
-                            <Text style={styles.badgeText}>
-                              {statusText}
-                            </Text>
+                            <Text style={styles.badgeText}>{statusText}</Text>
                           </View>
                         )}
                       </View>
@@ -823,25 +880,23 @@ export default function PendaftaranScreen() {
         </TouchableOpacity>
       </Modal>
 
-      {/*Modal daftar NoRM tidak sama TGL lahir*/}          
+      {/*Modal daftar NoRM tidak sama TGL lahir*/}
       <Modal visible={modalErrorVisible} transparent animationType="fade">
         <TouchableOpacity
           style={styles.errorOverlay}
           activeOpacity={1}
           onPress={() => setModalErrorVisible(false)}
         >
-            <TouchableOpacity
-              activeOpacity={1}
-              style={styles.errorBox}
-              onPress={(e) => e.stopPropagation()}
-            >
+          <TouchableOpacity
+            activeOpacity={1}
+            style={styles.errorBox}
+            onPress={(e) => e.stopPropagation()}
+          >
             <View style={styles.errorIconCircle}>
               <Text style={styles.errorIcon}>!</Text>
             </View>
 
-            <Text style={styles.errorText}>
-              {errorMessage}
-            </Text>
+            <Text style={styles.errorText}>{errorMessage}</Text>
 
             <TouchableOpacity
               onPress={() => {
@@ -863,7 +918,7 @@ export default function PendaftaranScreen() {
         </TouchableOpacity>
       </Modal>
 
-      {/*Modal repon daftar*/}        
+      {/*Modal repon daftar*/}
       <Modal visible={modalSuksesVisible} transparent animationType="fade">
         <TouchableOpacity
           style={styles.modalOverlay}
@@ -888,56 +943,39 @@ export default function PendaftaranScreen() {
 
             <View style={styles.qrWrapper}>
               <QRCode
-                  value={String(
-                    buktiDaftar?.id ||
-                      selectedPasien?.patientid ||
-                      ""
-                  )}
-                  size={180}
-                  logo={logoRSA}
-                  logoSize={42}
-                  logoBackgroundColor="transparent"
-                />
+                value={String(buktiDaftar?.idol || buktiDaftar?.id || "")}
+                size={180}
+                logo={logoRSA}
+                logoSize={42}
+                logoBackgroundColor="transparent"
+              />
             </View>
-
-            <InfoRow label="PIN" value={String(buktiDaftar?.id || "-")} />
-            <InfoRow label="No Antrean" value={String(buktiDaftar?.queue || ":")} />
+            <InfoRow label="PIN" value={String(buktiDaftar?.idol || "-")} />
+            <InfoRow
+              label="No Antrean"
+              value={String(buktiDaftar?.pxno || "-")}
+            />
             <InfoRow label="No RM" value={selectedPasien?.patientid || "-"} />
             <InfoRow label="Dokter" value={selectedDokter?.dokter || "-"} />
             <InfoRow label="Pasien" value={selectedPasien?.name || "-"} />
             <InfoRow label="Tanggal" value={selectedTanggal?.label || "-"} />
             <InfoRow
               label="Jam praktek"
-              value={
-                selectedJamPraktek?.shift === "P"
-                  ? "Pagi"
-                  : "Sore"
-              }
+              value={selectedJamPraktek?.shift === "P" ? "Pagi" : "Sore"}
             />
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
-
     </View>
   );
 }
 
-function InfoRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
+function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.infoRow}>
-      <Text style={styles.infoLabel}>
-        {label}
-      </Text>
+      <Text style={styles.infoLabel}>{label}</Text>
 
-      <Text style={styles.infoValue}>
-        {value}
-      </Text>
+      <Text style={styles.infoValue}>{value}</Text>
     </View>
   );
 }
@@ -1170,26 +1208,26 @@ const styles = StyleSheet.create({
     fontSize: 15,
     marginVertical: 24,
   },
-  
+
   closeJamWrapper: {
     width: "100%",
     alignItems: "flex-end",
     marginBottom: 10,
   },
-  
+
   closeJamButton: {
     backgroundColor: "#F3C15C",
     paddingHorizontal: 18,
     paddingVertical: 7,
     borderRadius: 20,
   },
-  
+
   closeJamText: {
     fontSize: 16,
     color: "#6A4A00",
     fontWeight: "700",
   },
-  
+
   jamItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -1197,7 +1235,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: "#ECECEC",
-  },  
+  },
 
   modalJamBox: {
     width: "90%",
@@ -1208,7 +1246,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     elevation: 10,
   },
-  
+
   jamModalTitle: {
     fontSize: 20,
     fontWeight: "800",
@@ -1216,54 +1254,54 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 10,
   },
-  
+
   jamLeft: {
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
   },
-  
+
   jamText: {
     fontSize: 18,
     color: "#555",
     marginLeft: 10,
     fontWeight: "700",
   },
-  
+
   badgeText: {
     color: "#fff",
     fontSize: 13,
     fontWeight: "700",
   },
-  
+
   badgeMasuk: {
     backgroundColor: "#2E7D32",
     borderRadius: 14,
     paddingHorizontal: 13,
     paddingVertical: 5,
   },
-  
+
   badgeLibur: {
     backgroundColor: "#607D8B",
     borderRadius: 14,
     paddingHorizontal: 13,
     paddingVertical: 5,
   },
-  
+
   badgePenuh: {
     backgroundColor: "#C62828",
     borderRadius: 14,
     paddingHorizontal: 13,
     paddingVertical: 5,
   },
-  
+
   badgeTutup: {
     backgroundColor: "#D4A017",
     borderRadius: 14,
     paddingHorizontal: 13,
     paddingVertical: 5,
   },
-  
+
   badgeJumlah: {
     backgroundColor: "#0A7C86",
     borderRadius: 14,
@@ -1273,7 +1311,7 @@ const styles = StyleSheet.create({
     minWidth: 82,
     alignItems: "center",
   },
-  
+
   badgeSisa: {
     backgroundColor: "#C24A00",
     borderRadius: 14,
@@ -1291,7 +1329,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#ECECEC",
   },
-  
+
   jamRightInline: {
     flexDirection: "row",
     alignItems: "center",
@@ -1303,7 +1341,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     fontWeight: "600",
   },
-  
+
   textInput: {
     borderWidth: 1,
     borderColor: "#D0D8D8",
@@ -1314,7 +1352,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     color: "#333",
   },
-  
+
   searchButton: {
     backgroundColor: "#F2A000",
     borderRadius: 8,
@@ -1322,13 +1360,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 16,
   },
-  
+
   searchButtonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "800",
   },
-  
+
   pasienItem: {
     borderWidth: 1,
     borderColor: "#0A7C86",
@@ -1337,7 +1375,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginBottom: 10,
   },
-  
+
   pasienText: {
     color: "#0A7C86",
     fontSize: 16,
@@ -1351,7 +1389,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 24,
   },
-  
+
   errorBox: {
     width: "88%",
     backgroundColor: "#fff",
@@ -1361,7 +1399,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     elevation: 10,
   },
-  
+
   errorIconCircle: {
     width: 96,
     height: 96,
@@ -1371,13 +1409,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 22,
   },
-  
+
   errorIcon: {
     color: "#fff",
     fontSize: 56,
     fontWeight: "900",
   },
-  
+
   errorText: {
     fontSize: 20,
     color: "#666",
@@ -1385,7 +1423,7 @@ const styles = StyleSheet.create({
     lineHeight: 28,
     marginBottom: 18,
   },
-  
+
   errorLink: {
     fontSize: 18,
     color: "#0A7C86",
@@ -1393,14 +1431,14 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginBottom: 24,
   },
-  
+
   errorButton: {
     backgroundColor: "#0A7C86",
     paddingHorizontal: 32,
     paddingVertical: 12,
     borderRadius: 14,
   },
-  
+
   errorButtonText: {
     color: "#fff",
     fontSize: 17,
@@ -1414,20 +1452,20 @@ const styles = StyleSheet.create({
     padding: 18,
     elevation: 10,
   },
-  
+
   buktiHeader: {
     borderBottomWidth: 1,
     borderBottomColor: "#0A7C86",
     paddingBottom: 10,
     marginBottom: 14,
   },
-  
+
   buktiTitle: {
     fontSize: 20,
     color: "#555",
     fontWeight: "700",
   },
-  
+
   batalButton: {
     position: "absolute",
     right: 0,
@@ -1437,18 +1475,18 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     borderRadius: 8,
   },
-  
+
   batalButtonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "700",
   },
-  
+
   qrWrapper: {
     alignItems: "center",
     marginVertical: 18,
   },
-  
+
   infoRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -1457,13 +1495,13 @@ const styles = StyleSheet.create({
     borderBottomColor: "#DDD",
     paddingVertical: 12,
   },
-  
+
   infoLabel: {
     fontSize: 16,
     color: "#111",
     fontWeight: "800",
   },
-  
+
   infoValue: {
     fontSize: 16,
     color: "#111",
@@ -1471,5 +1509,4 @@ const styles = StyleSheet.create({
     textAlign: "right",
     marginLeft: 20,
   },
-
 });

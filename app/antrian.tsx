@@ -1,7 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
-import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import { router } from "expo-router";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -11,41 +11,42 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
-} from 'react-native';
-  
-  
+  View,
+} from "react-native";
+
 type QueueItem = {
-    id: string;
-    poli: string;
-    idpoli: number;
-    dokter: string;
-    jp: number;
-    allpx: number;
-    finishpx: number;
-    quepx: number;
-    fotoOL?: string | null;
-  };
+  id: string;
+  poli: string;
+  idpoli: number;
+  dokter: string;
+  jp: number;
+  allpx: number;
+  finishpx: number;
+  quepx: number;
+  fotoOL?: string | null;
+};
 
 export default function AntrianScreen() {
-  const [data, setData] = useState<QueueItem[]>([]); 
+  const [data, setData] = useState<QueueItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const getShift = (jp: number) => {
-    if (jp === 1) return 'Pagi';
-    if (jp === 2) return 'Sore';
-    return '-';
+    if (jp === 1) return "Pagi";
+    if (jp === 2) return "Sore";
+    return "-";
   };
 
   const loadData = async () => {
     try {
-      const queueRes = await fetch('http://app.rsabojonegoro.com:5000/his/quepx');
+      const queueRes = await fetch(
+        "http://app.rsabojonegoro.com:5000/his/quepx",
+      );
       const queueJson = await queueRes.json();
-  
+
       setData(queueJson?._embedded?.quePxes || []);
     } catch (error) {
-      console.log('Error antrian:', error);
+      console.log("Error antrian:", error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -60,17 +61,17 @@ export default function AntrianScreen() {
     setRefreshing(true);
     loadData();
   };
-  
+
   const now = new Date();
-  const tanggal = now.toLocaleDateString('id-ID', {
-    weekday: 'long',
-    day: '2-digit',
-    month: 'long',
+  const tanggal = now.toLocaleDateString("id-ID", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
   });
 
-  const jam = now.toLocaleTimeString('id-ID', {
-    hour: '2-digit',
-    minute: '2-digit',
+  const jam = now.toLocaleTimeString("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
   });
 
   if (loading) {
@@ -87,7 +88,10 @@ export default function AntrianScreen() {
       <StatusBar backgroundColor="#0A7C86" barStyle="light-content" />
 
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
           <Ionicons name="arrow-back" size={26} color="#fff" />
         </TouchableOpacity>
 
@@ -108,7 +112,7 @@ export default function AntrianScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#0A7C86']}
+            colors={["#0A7C86"]}
           />
         }
         renderItem={({ item }) => (
@@ -143,15 +147,19 @@ export default function AntrianScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F7F9FA',
+    backgroundColor: "#F4F8F8",
   },
   header: {
-    backgroundColor: '#0A7C86',
-    paddingTop: 5,   // 🔼 naikkan header
+    backgroundColor: "#0A7C86",
+    paddingTop: 5, // 🔼 naikkan header
     paddingBottom: 8,
     paddingHorizontal: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+
+    elevation: 8,
   },
   backButton: {
     marginRight: 12,
@@ -159,96 +167,100 @@ const styles = StyleSheet.create({
   },
   headerTextWrap: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     marginRight: 38,
   },
   headerTitle: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   headerSubtitle: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 14,
     marginTop: 1,
   },
   content: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
+    paddingTop: 5,
   },
   card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#8FBFC4',
-    backgroundColor: '#fff',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    marginHorizontal: 14,
+    marginBottom: 5,
+    borderRadius: 18,
+    padding: 5,
+    elevation: 4,
   },
   icon: {
     width: 50,
     height: 50,
     borderRadius: 25,
     marginRight: 12,
-    backgroundColor: '#EDEDED',
+    backgroundColor: "#EDEDED",
   },
   info: {
     flex: 1,
-  }, 
-  topLine: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
   },
- poli: {
+  topLine: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  poli: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#111',
+    fontWeight: "700",
+    color: "#111",
     marginRight: 8,
-   },
-rowDokter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  },
+  rowDokter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   dokter: {
     fontSize: 14,
-    color: '#777',
+    color: "#777",
     lineHeight: 19,
     marginTop: 2,
   },
   rightBox: {
     width: 125,
-    alignItems: 'flex-end',
-    justifyContent: 'center',
+    alignItems: "flex-end",
+    justifyContent: "center",
   },
   shift: {
     fontSize: 16,
-    color: '#0A7C86',
-    fontWeight: '500',
+    color: "#0A7C86",
+    fontWeight: "500",
+    marginRight: 1,
   },
   queueRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
   },
   queueText: {
     fontSize: 13,
-    color: '#555',
-    textAlign: 'right',
+    color: "#555",
+    textAlign: "right",
     marginTop: 2,
+    marginRight: 5,
   },
   finishText: {
     fontSize: 13,
-    color: '#555',
+    color: "#555",
   },
   loading: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   loadingText: {
     marginTop: 10,
-    color: '#555',
+    color: "#555",
   },
 });
