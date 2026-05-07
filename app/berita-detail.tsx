@@ -2,13 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 type Berita = {
@@ -37,7 +37,7 @@ export default function BeritaDetail() {
       setLoading(true);
 
       const res = await fetch(
-        `http://app.rsabojonegoro.com:4000/his/about/berita/${id}`
+        `http://app.rsabojonegoro.com:5000/his/about/berita/${id}`
       );
 
       const json = await res.json();

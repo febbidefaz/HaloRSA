@@ -85,6 +85,7 @@ export default function PendaftaranScreen() {
   const [modalSuksesVisible, setModalSuksesVisible] = useState(false);
   const [buktiDaftar, setBuktiDaftar] = useState<any>(null);
   const params = useLocalSearchParams();
+  const [loadingDaftar, setLoadingDaftar] = useState(false);
 
   const getSpecialist = async () => {
     try {
@@ -145,25 +146,52 @@ export default function PendaftaranScreen() {
     "Desember",
   ];
 
-  const getTanggalSeminggu = () => {
-    const hasil = [];
+const getTanggalDokter = async (drId: number) => {
+  try {
+    const response = await fetch(
+      `http://app.rsabojonegoro.com:5000/his/about/jadwaldokter/dokter?dr=${drId}`
+    );
+
+    const json = await response.json();
+
+    const jadwal = json?._embedded?.jadwalDokters || [];
+
+    const hasil: any[] = [];
+
+    const sudahAda = new Set();
 
     for (let i = 0; i < 7; i++) {
       const date = new Date();
       date.setDate(date.getDate() + i);
 
-      if (date.getDay() === 0) continue;
+      const day = date.getDay();
+
+      if (day === 0) continue;
+
+      const adaJadwal = jadwal.some((x: any) => x.hr === day);
+
+      if (!adaJadwal) continue;
+
+      const key = date.toISOString().split("T")[0];
+
+      if (sudahAda.has(key)) continue;
+
+      sudahAda.add(key);
 
       hasil.push({
-        label: `${namaHari[date.getDay()]}, ${date.getDate()} ${
+        label: `${namaHari[day]}, ${date.getDate()} ${
           namaBulan[date.getMonth()]
         } ${date.getFullYear()}`,
-        value: date.toISOString().split("T")[0],
+        value: key,
+        hr: day,
       });
     }
 
-    return hasil;
-  };
+    setListTanggal(hasil);
+  } catch (error) {
+    console.log("Gagal ambil tanggal dokter:", error);
+  }
+};
 
   const getKodeHari = (dateValue: string) => {
     const date = new Date(dateValue);
@@ -173,10 +201,18 @@ export default function PendaftaranScreen() {
     return day;
   };
 
-  const [selectedTanggal, setSelectedTanggal] = useState<{
+  const [listTanggal, setListTanggal] = useState<
+  {
     label: string;
     value: string;
-  } | null>(null);
+    hr: number;
+  }[]
+>([]);
+
+const [selectedTanggal, setSelectedTanggal] = useState<{
+  label: string;
+  value: string;
+} | null>(null);
 
   const getJadwalPraktek = async (drId: number, tanggal: string) => {
     try {
@@ -244,8 +280,7 @@ export default function PendaftaranScreen() {
         const pasien = json.response;
 
         setSelectedPasien(pasien);
-        await simpanPasienKeHp(pasien);
-
+        
         setNoRM("");
         setTglLahir("");
         setModalPasienVisible(false);
@@ -302,6 +337,7 @@ export default function PendaftaranScreen() {
   };
 
   const daftarPasien = async () => {
+    setLoadingDaftar(true);
     if (
       !selectedKlinik ||
       !selectedDokter ||
@@ -353,7 +389,9 @@ export default function PendaftaranScreen() {
         const reportJson = await reportResponse.json();
 
         setBuktiDaftar(reportJson);
+        await simpanPasienKeHp(selectedPasien);
         setModalSuksesVisible(true);
+        
       } else {
         setErrorMessage(
           json?.metadata?.message || json?.message || "Pendaftaran gagal",
@@ -364,6 +402,8 @@ export default function PendaftaranScreen() {
       console.log("Gagal daftar:", error);
       setErrorMessage("Gagal terhubung ke server pendaftaran");
       setModalErrorVisible(true);
+    } finally {
+      setLoadingDaftar(false);
     }
   };
 
@@ -374,44 +414,59 @@ export default function PendaftaranScreen() {
       setGoogleId(savedGoogleId);
     }
   };
+
   useEffect(() => {
     if (params.ulang !== "1") return;
-
-    if (params.patientid && params.patientname) {
-      setSelectedPasien({
-        id: String(params.patientid),
-        patientid: String(params.patientid),
-        name: String(params.patientname),
-        date: "",
-        upx: Number(params.upx || 0),
-      });
-    }
-
-    if (params.klinik) {
-      setSelectedKlinik({
-        id: Number(params.clinicId || 0),
-        name: String(params.klinik),
-        category: String(params.layanan || ""),
-        fotoOL: null,
-        layID: 0,
-        kdBPJS: null,
-      });
-    }
-
-    if (params.dokter) {
-      setSelectedDokter({
-        id: Number(params.dokterid || 0),
-        dokter: String(params.dokter),
-        spesialis: String(params.klinik || ""),
-        sp: Number(params.clinicId || 0),
-      });
-    }
-
-    if (params.bukaTanggal === "1") {
-      setTimeout(() => {
-        setModalTanggalVisible(true);
-      }, 500);
-    }
+  
+    const loadDaftarUlang = async () => {
+      try {
+        if (params.patientid && params.patientname) {
+          setSelectedPasien({
+            id: String(params.patientid),
+            patientid: String(params.patientid),
+            name: String(params.patientname),
+            date: "",
+            upx: Number(params.upx || 0),
+          });
+        }
+  
+        if (params.klinik) {
+          setSelectedKlinik({
+            id: Number(params.clinicId || 0),
+            name: String(params.klinik),
+            category: String(params.layanan || ""),
+            fotoOL: null,
+            layID: 0,
+            kdBPJS: null,
+          });
+        }
+  
+        if (params.dokter) {
+          const dokterSelected = {
+            id: Number(params.dokterid || 0),
+            dokter: String(params.dokter),
+            spesialis: String(params.klinik || ""),
+            sp: Number(params.clinicId || 0),
+          };
+  
+          setSelectedDokter(dokterSelected);
+  
+          await getTanggalDokter(dokterSelected.id);
+        }
+  
+        if (params.bukaTanggal === "1") {
+          setTimeout(() => {
+            setModalTanggalVisible(true);
+          }, 400);
+        }
+      } catch (err) {
+        console.log("loadDaftarUlang error:", err);
+      }
+    };
+  
+    loadDaftarUlang();
+  
+    return () => {};
   }, [
     params.ulang,
     params.patientid,
@@ -505,13 +560,23 @@ export default function PendaftaranScreen() {
             onPress={() => setModalPasienVisible(true)}
           />
 
-          <TouchableOpacity
-            style={styles.button}
-            activeOpacity={0.85}
-            onPress={daftarPasien}
-          >
-            <Text style={styles.buttonText}>Daftar Sekarang</Text>
-          </TouchableOpacity>
+<TouchableOpacity
+  style={[
+    styles.button,
+    loadingDaftar && { opacity: 0.7 }
+  ]}
+  activeOpacity={0.85}
+  onPress={daftarPasien}
+  disabled={loadingDaftar}
+>
+  {loadingDaftar ? (
+    <ActivityIndicator color="#fff" />
+  ) : (
+    <Text style={styles.buttonText}>
+      Daftar Sekarang
+    </Text>
+  )}
+</TouchableOpacity>
         </View>
       </View>
 
@@ -626,11 +691,13 @@ export default function PendaftaranScreen() {
                 renderItem={({ item }) => (
                   <TouchableOpacity
                     style={styles.spesialisItem}
-                    onPress={() => {
+                    onPress={async () => {
                       setSelectedDokter(item);
 
                       setModalDokterVisible(false);
-
+                      
+                      await getTanggalDokter(item.id);
+                      
                       setTimeout(() => {
                         setModalTanggalVisible(true);
                       }, 300);
@@ -680,7 +747,7 @@ export default function PendaftaranScreen() {
             <Text style={styles.modalTitle}>Pilih Tanggal</Text>
 
             <FlatList
-              data={getTanggalSeminggu()}
+             data={listTanggal}
               keyExtractor={(item) => item.value}
               renderItem={({ item }) => (
                 <TouchableOpacity
@@ -922,8 +989,15 @@ export default function PendaftaranScreen() {
       <Modal visible={modalSuksesVisible} transparent animationType="fade">
         <TouchableOpacity
           style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setModalSuksesVisible(false)}
+          activeOpacity={1}         
+          onPress={() => {
+            setModalSuksesVisible(false);
+          
+            setTimeout(() => {
+              router.push("/riwayat-pendaftaran");
+            }, 300);
+          }}     
+          
         >
           <TouchableOpacity
             activeOpacity={1}
@@ -935,7 +1009,13 @@ export default function PendaftaranScreen() {
 
               <TouchableOpacity
                 style={styles.batalButton}
-                onPress={() => setModalSuksesVisible(false)}
+                onPress={() => {
+                  setModalSuksesVisible(false);
+
+                  setTimeout(() => {
+                    router.push("/riwayat-pendaftaran");
+                  }, 300);
+                }}
               >
                 <Text style={styles.batalButtonText}>Tutup</Text>
               </TouchableOpacity>

@@ -47,8 +47,7 @@ export default function JadwalBerdasarkanHari() {
       setErrorMsg('');
 
       const response = await fetch(
-      //  `https://android.rsabojonegoro.com/his/about/jadwaldokter/hari?hr=${hr}`
-        `http://app.rsabojonegoro.com:4000/his/about/jadwaldokter/hari?hr=${hr}`
+        `http://app.rsabojonegoro.com:5000/his/about/jadwaldokter/hari?hr=${hr}`
       );
 
       const json = await response.json();
@@ -67,8 +66,7 @@ export default function JadwalBerdasarkanHari() {
     const loadSpesialis = async () => {
       try {
        // const res = await fetch('https://android.rsabojonegoro.com/his/new/Specialist');
-      //  const res = await fetch('https://app.rsabojonegoro.com:4000/his/new/Specialist');
-        const res = await fetch('http://app.rsabojonegoro.com:4000/his/new/Specialist');
+        const res = await fetch('http://app.rsabojonegoro.com:5000/his/new/Specialist');
         const json = await res.json();
         setSpesialisList(json || []);
       } catch (err) {
@@ -104,7 +102,7 @@ export default function JadwalBerdasarkanHari() {
           onPress={() => router.back()}
           style={styles.backButton}
         >
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+          <Ionicons name="chevron-back" size={30} color="#fff" />
         </TouchableOpacity>
   
         <Text style={styles.headerTitle}>Jadwal Dokter</Text>
@@ -145,12 +143,14 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    backgroundColor: '#0A7C86',
-    paddingTop: 34,
-    paddingBottom: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 4,
+    backgroundColor: "#0A7C86",
+    paddingTop: 38,
+    paddingBottom: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    elevation: 6,
   },
 
   headerTitle: {

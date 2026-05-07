@@ -20,7 +20,7 @@ export default function JadwalDokterScreen() {
           onPress={() => router.back()}
           style={styles.backButton}
         >
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+          <Ionicons name="chevron-back" size={30} color="#fff" />
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>Jadwal Dokter</Text>
@@ -63,10 +63,13 @@ const styles = StyleSheet.create({
 
   header: {
     backgroundColor: "#0A7C86",
-    paddingTop: 32, // 🔥 turun 1 spasi
-    paddingBottom: 12,
+    paddingTop: 38,
+    paddingBottom: 10,
     alignItems: "center",
     justifyContent: "center",
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    elevation: 6,
   },
 
   headerTitle: {
@@ -78,7 +81,7 @@ const styles = StyleSheet.create({
   backButton: {
     position: "absolute",
     left: 14,
-    top: 34,
+    top: 35,
   },
 
   content: {

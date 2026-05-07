@@ -24,8 +24,7 @@ export default function KonsultasiScreen() {
 
   const loadWA = async () => {
     try {
-      const res = await fetch(
-        //'https://app.rsabojonegoro.com:4000/his/new/NoWAAndroid'
+      const res = await fetch(      
         "http://app.rsabojonegoro.com:5000/his/new/NoWAAndroid",
       );
       const json = await res.json();
@@ -67,11 +66,19 @@ export default function KonsultasiScreen() {
       <StatusBar backgroundColor="#0A7C86" barStyle="light-content" />
       {/* HEADER */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Konsultasi Dokter</Text>
-      </View>
+  <TouchableOpacity
+    onPress={() => router.back()}
+    style={styles.backButton}
+  >
+   <Ionicons name="chevron-back" size={30} color="#fff" />
+  </TouchableOpacity>
+
+  <View style={styles.headerCenter}>
+    <Text style={styles.title}>Konsultasi Dokter</Text>
+
+ 
+  </View>
+</View>
 
       {/* CONTENT */}
       <View style={styles.content}>
@@ -94,11 +101,30 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: "#0A7C86",
+    paddingTop: 38,
+    paddingBottom: 12,
+    paddingHorizontal: 16,
+  
     flexDirection: "row",
     alignItems: "center",
-    padding: 14,
-    gap: 10,
-    paddingTop: 35,
+  
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+  
+    elevation: 6,
+  },
+
+  backButton: {
+    position: "absolute",
+    left: 16,
+    top: 35,
+    zIndex: 10,
+  },
+  
+  headerCenter: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   title: {

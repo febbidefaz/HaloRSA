@@ -84,8 +84,13 @@ export default function AntrianScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar backgroundColor="#0A7C86" barStyle="light-content" />
+    <View style={styles.container}>
+      <StatusBar
+        backgroundColor="#0A7C86"
+        barStyle="light-content"
+      />
+  
+      <SafeAreaView style={styles.safeArea}>
 
       <View style={styles.header}>
         <TouchableOpacity
@@ -95,8 +100,7 @@ export default function AntrianScreen() {
           <Ionicons name="arrow-back" size={26} color="#fff" />
         </TouchableOpacity>
 
-        <View style={styles.headerTextWrap}>
-          <Text style={styles.headerTitle}></Text>
+        <View style={styles.headerTextWrap}>      
           <Text style={styles.headerTitle}>Antrian Rawat Jalan</Text>
           <Text style={styles.headerSubtitle}>
             {tanggal}, {jam}
@@ -141,49 +145,62 @@ export default function AntrianScreen() {
         )}
       />
     </SafeAreaView>
+
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#EEF5F5",
+  },
   safeArea: {
     flex: 1,
-    backgroundColor: "#F4F8F8",
+    backgroundColor: "#EEF5F5",
   },
   header: {
     backgroundColor: "#0A7C86",
-    paddingTop: 5, // 🔼 naikkan header
-    paddingBottom: 8,
-    paddingHorizontal: 10,
+    paddingTop: 38,
+    paddingBottom: 12,
+    paddingHorizontal: 16,
+  
     flexDirection: "row",
     alignItems: "center",
+  
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
-
-    elevation: 8,
+  
+    elevation: 6,
   },
+  
   backButton: {
-    marginRight: 12,
-    marginTop: 10,
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
   },
+  
   headerTextWrap: {
     flex: 1,
     alignItems: "center",
-    marginRight: 38,
+    justifyContent: "center",
   },
   headerTitle: {
     color: "#fff",
-    fontSize: 20,
-    fontWeight: "700",
+    fontSize: 22,
+    fontWeight: "800",
   },
+  
   headerSubtitle: {
-    color: "#fff",
-    fontSize: 14,
-    marginTop: 1,
+    color: "#D9FFFF",
+    fontSize: 13,
+    marginTop: 4,
   },
+  
   content: {
     flex: 1,
-    backgroundColor: "#fff",
-    paddingTop: 5,
+    paddingTop: 10,
   },
   card: {
     flexDirection: "row",

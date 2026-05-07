@@ -63,7 +63,7 @@ export default function JadwalPerHari() {
   const loadSpesialis = async () => {
     try {
       const res = await fetch(
-        'http://app.rsabojonegoro.com:4000/his/new/Specialist'
+        'http://app.rsabojonegoro.com:5000/his/new/Specialist'
       );
       const json = await res.json();
       setSpesialisList(json || []);
@@ -77,7 +77,7 @@ export default function JadwalPerHari() {
       setLoading(true);
 
       const res = await fetch(
-        `http://app.rsabojonegoro.com:4000/his/about/jadwaldokter/hari?hr=${hr}`
+        `http://app.rsabojonegoro.com:5000/his/about/jadwaldokter/hari?hr=${hr}`
       );
 
       const json = await res.json();
@@ -100,7 +100,7 @@ export default function JadwalPerHari() {
 
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+        <Ionicons name="chevron-back" size={30} color="#fff" />
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>Jadwal {hari}</Text>
@@ -165,11 +165,14 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    backgroundColor: '#0A7C86',
-    paddingTop: 32,
-    paddingBottom: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#0A7C86",
+    paddingTop: 38,
+    paddingBottom: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    elevation: 6,
   },
 
   backButton: {

@@ -555,12 +555,18 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
 
   header: {
-    backgroundColor: '#0A7C86',
-    paddingTop: 30,
-    paddingBottom: 10,
-    paddingHorizontal: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
+    backgroundColor: "#0A7C86",
+    paddingTop: 38,
+    paddingBottom: 12,
+    paddingHorizontal: 16,
+  
+    flexDirection: "row",
+    alignItems: "center",
+  
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+  
+    elevation: 6,
   },
 
   backButton: {

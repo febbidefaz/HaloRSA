@@ -117,7 +117,7 @@ export default function BedScreen() {
           onPress={() => router.back()}
           style={styles.backButton}
         >
-          <Ionicons name="arrow-back" size={26} color="#fff" />
+          <Ionicons name="chevron-back" size={30} color="#fff" />
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>Informasi Tempat Tidur</Text>
@@ -215,12 +215,14 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    backgroundColor: '#00897B',
-    paddingTop: 34,
-    paddingBottom: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 4,
+    backgroundColor: "#0A7C86",
+    paddingTop: 38,
+    paddingBottom: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    elevation: 6,
   },
 
   headerTitle: {

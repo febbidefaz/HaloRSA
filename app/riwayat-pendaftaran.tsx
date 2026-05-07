@@ -1,8 +1,9 @@
 import logoRSA from "@/assets/images/logorsa.png";
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -64,7 +65,7 @@ export default function RiwayatPendaftaran() {
       const googleId = await SecureStore.getItemAsync("google_id");
 
       const res = await fetch(
-        `http://app.rsabojonegoro.com:4000/his/reg/riwayatreg/userid?userid=${googleId}`,
+        `http://app.rsabojonegoro.com:5000/his/reg/riwayatreg/userid?userid=${googleId}`,
       );
 
       const json = await res.json();
@@ -77,9 +78,11 @@ export default function RiwayatPendaftaran() {
     }
   };
 
-  useEffect(() => {
-    loadRiwayat();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadRiwayat();
+    }, [])
+  );
 
   //delete
   const handleDelete = () => {
@@ -168,7 +171,7 @@ export default function RiwayatPendaftaran() {
           onPress={() => router.back()}
           style={styles.backButton}
         >
-          <Ionicons name="arrow-back" size={26} color="#fff" />
+          <Ionicons name="chevron-back" size={30} color="#fff" />
         </TouchableOpacity>
 
         <View style={{ flex: 1 }}>
@@ -479,10 +482,10 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     backgroundColor: "#fff",
-    marginHorizontal: 14,
+    marginHorizontal: 10,
     marginTop: 5,
     borderRadius: 20,
-    padding: 14,
+    padding: 5,
 
     elevation: 4,
     shadowColor: "#000",
@@ -537,7 +540,7 @@ const styles = StyleSheet.create({
 
   buttonRow: {
     flexDirection: "row",
-    marginTop: 14,
+    marginTop: 5,
     gap: 10,
   },
 
@@ -654,7 +657,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#0A7C86",
     paddingVertical: 12,
     borderRadius: 8,
-    marginTop: 10,
+    marginTop: 5,
     alignItems: "center",
     elevation: 2,
   },

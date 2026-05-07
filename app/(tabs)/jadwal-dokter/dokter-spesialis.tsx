@@ -59,7 +59,7 @@ export default function DokterSpesialis() {
         setLoading(true);
 
         const res = await fetch(
-          `http://app.rsabojonegoro.com:4000/his/new/Specialist/sp?sp=${sp}`
+          `http://app.rsabojonegoro.com:5000/his/new/Specialist/sp?sp=${sp}`
         );
 
         const json = await res.json();
@@ -92,7 +92,7 @@ const loadJadwalDokter = async (idDokter: number) => {
     }));
 
     const res = await fetch(
-      `http://app.rsabojonegoro.com:4000/his/about/jadwaldokter/dokter?dr=${idDokter}`
+      `http://app.rsabojonegoro.com:5000/his/about/jadwaldokter/dokter?dr=${idDokter}`
     );
 
     const json = await res.json();
@@ -125,7 +125,7 @@ const loadJadwalDokter = async (idDokter: number) => {
           onPress={() => router.back()}
           style={styles.backButton}
         >
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+          <Ionicons name="chevron-back" size={30} color="#fff" />
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>Jadwal Dokter {nama}</Text>
@@ -246,12 +246,14 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    backgroundColor: '#0A7C86',
-    paddingTop: 34,
-    paddingBottom: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 3,
+    backgroundColor: "#0A7C86",
+    paddingTop: 38,
+    paddingBottom: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    elevation: 6,
   },
   
   backButton: {

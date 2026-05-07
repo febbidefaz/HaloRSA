@@ -1,11 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StatusBar,
@@ -35,6 +37,17 @@ export default function PendaftaranRM() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<PasienRM | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const inputRefs = useRef<Record<string, TextInput | null>>({});
+  const formListRef = useRef<Animated.FlatList<any> | null>(null);
+  const submitButtonRef = useRef<TouchableOpacity | null>(null);
+
+  const convertTanggalApi = (tgl: string) => {
+    const parts = tgl.split("-");
+
+    if (parts.length !== 3) return tgl;
+
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  };
 
   const formatTanggal = (tgl?: string) => {
     if (!tgl) return "-";
@@ -54,7 +67,7 @@ export default function PendaftaranRM() {
       const googleId = await SecureStore.getItemAsync("google_id");
 
       const res = await fetch(
-        `http://app.rsabojonegoro.com:5000/his/reg/regpxol/userid?userid=${googleId}`,
+        `http://app.rsabojonegoro.com:5000/his/reg/regpxol/userid?userid=${googleId}`
       );
 
       const json = await res.json();
@@ -176,7 +189,7 @@ export default function PendaftaranRM() {
         kel: form.kelurahan,
         kec: form.kecamatan,
         tlpn: form.telepon,
-        tlahir: form.tlahir,
+        tlahir: convertTanggalApi(form.tlahir),
         goldr: form.goldar,
         jk: form.jk,
         job: form.pekerjaan,
@@ -186,7 +199,8 @@ export default function PendaftaranRM() {
         status: form.status,
         suku: form.suku,
         agama: form.agama,
-        pend: form.pendidikan, // ⬅️ penting!
+        pend: form.pendidikan,
+        statusregpx: 1,
         userid: googleId,
       };
 
@@ -208,14 +222,14 @@ export default function PendaftaranRM() {
       }
 
       const res = await fetch(
-        "http://app.rsabojonegoro.com:5000/his/reg/regpxol",
+        "http://app.rsabojonegoro.com:4000/his/reg/regpxol",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(payload),
-        },
+        }
       );
 
       const text = await res.text();
@@ -224,7 +238,7 @@ export default function PendaftaranRM() {
         throw new Error(text);
       }
 
-      alert("Berhasil daftar RM");
+      setShowSuccess(true);
       setShowForm(false);
       loadData();
     } catch (err: any) {
@@ -251,6 +265,7 @@ export default function PendaftaranRM() {
   const [agamaList, setAgamaList] = useState<any[]>([]);
   const [sukuList, setSukuList] = useState<any[]>([]);
   const [pendidikanList, setPendidikanList] = useState<any[]>([]);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const loadMasterData = async () => {
     try {
@@ -282,7 +297,7 @@ export default function PendaftaranRM() {
   const loadKecamatan = async () => {
     try {
       const res = await fetch(
-        "http://app.rsabojonegoro.com:5000/his/reg/camat",
+        "http://app.rsabojonegoro.com:5000/his/reg/camat"
       );
       const json = await res.json();
       setKecamatanList(json?._embedded?.kecamatans || []);
@@ -294,12 +309,44 @@ export default function PendaftaranRM() {
   const loadKelurahan = async (camatId: number) => {
     try {
       const res = await fetch(
-        `http://app.rsabojonegoro.com:5000/his/reg/lurah?camatid=${camatId}`,
+        `http://app.rsabojonegoro.com:5000/his/reg/lurah?camatid=${camatId}`
       );
       const json = await res.json();
       setKelurahanList(json?._embedded?.kelurahans || []);
     } catch (err) {
       console.log("ERROR LURAH:", err);
+    }
+  };
+
+  const getStatusReg = (status: number) => {
+    switch (status) {
+      case 1:
+        return {
+          text: "NO RM PROSES",
+          bg: "#FFF3CD",
+          color: "#D98C00",
+        };
+
+      case 2:
+        return {
+          text: "NO RM TERDAFTAR",
+          bg: "#D4F8E8",
+          color: "#0B8F55",
+        };
+
+      case 3:
+        return {
+          text: "NO RM BARU",
+          bg: "#D9ECFF",
+          color: "#1565C0",
+        };
+
+      default:
+        return {
+          text: "UNKNOWN",
+          bg: "#EEE",
+          color: "#666",
+        };
     }
   };
 
@@ -329,7 +376,13 @@ export default function PendaftaranRM() {
 
       <TouchableOpacity
         style={styles.addButton}
-        onPress={() => setShowForm(true)}
+        onPress={() => {
+          setShowForm(true);
+
+          setTimeout(() => {
+            inputRefs.current["nik"]?.focus();
+          }, 500);
+        }}
       >
         <Text style={styles.addButtonText}>Daftar RM Baru</Text>
       </TouchableOpacity>
@@ -363,9 +416,31 @@ export default function PendaftaranRM() {
                 </Text>
               </View>
 
-              <TouchableOpacity style={styles.rmButton}>
-                <Text style={styles.rmButtonText}>RM Baru</Text>
-              </TouchableOpacity>
+              {(() => {
+                const statusInfo = getStatusReg(item.statusregpx);
+
+                return (
+                  <View
+                    style={[
+                      styles.rmButton,
+                      {
+                        backgroundColor: statusInfo.bg,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.rmButtonText,
+                        {
+                          color: statusInfo.color,
+                        },
+                      ]}
+                    >
+                      {statusInfo.text}
+                    </Text>
+                  </View>
+                );
+              })()}
             </TouchableOpacity>
           ))}
 
@@ -446,604 +521,751 @@ export default function PendaftaranRM() {
         animationType="slide"
         onRequestClose={() => setShowForm(false)}
       >
-        <View style={styles.formOverlay}>
-          <Pressable
-            style={styles.formBackdrop}
-            onPress={() => setShowForm(false)}
-          />
-          <View style={styles.formBox}>
-            <TouchableOpacity onPress={() => setShowForm(false)}>
-              <Text style={styles.formClose}>Tutup</Text>
-            </TouchableOpacity>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <View style={styles.formOverlay}>
+            <Pressable
+              style={styles.formBackdrop}
+              onPress={() => setShowForm(false)}
+            />
+            <View style={styles.formBox}>
+              <TouchableOpacity onPress={() => setShowForm(false)}>
+                <Text style={styles.formClose}>Tutup</Text>
+              </TouchableOpacity>
 
-            <View style={styles.scrollWrapper}>
-              <Animated.FlatList
-                data={formFields}
-                keyExtractor={(item) => item.key}
-                style={styles.formScroll}
-                showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
-                keyboardDismissMode="on-drag"
-                contentContainerStyle={styles.formScrollContent}
-                onLayout={(e) => setListHeight(e.nativeEvent.layout.height)}
-                onContentSizeChange={(_, h) => setContentHeight(h)}
-                onScroll={Animated.event(
-                  [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                  { useNativeDriver: false },
-                )}
-                scrollEventThrottle={16}
-                renderItem={({ item }) => {
-                  // Kecamatan
-                  if (item.key === "kecamatan") {
-                    return (
-                      <View>
-                        <Text style={styles.label}>{item.label}</Text>
+              <View style={styles.scrollWrapper}>
+                <Animated.FlatList
+                  ref={formListRef}
+                  data={formFields}
+                  keyExtractor={(item) => item.key}
+                  style={styles.formScroll}
+                  showsVerticalScrollIndicator={false}
+                  keyboardShouldPersistTaps="handled"
+                  keyboardDismissMode="on-drag"
+                  contentContainerStyle={styles.formScrollContent}
+                  onLayout={(e) => setListHeight(e.nativeEvent.layout.height)}
+                  onContentSizeChange={(_, h) => setContentHeight(h)}
+                  onScroll={Animated.event(
+                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                    { useNativeDriver: false }
+                  )}
+                  scrollEventThrottle={16}
+                  renderItem={({ item }) => {
+                    // Kecamatan
+                    if (item.key === "kecamatan") {
+                      return (
+                        <View>
+                          <Text style={styles.label}>{item.label}</Text>
 
-                        <TouchableOpacity
-                          style={styles.input}
-                          onPress={() => setShowKecamatan(true)}
-                        >
-                          <Text
-                            style={{ color: form.kecamatan ? "#000" : "#888" }}
+                          <TouchableOpacity
+                            style={styles.input}
+                            onPress={() => setShowKecamatan(true)}
                           >
-                            {form.kecamatan || item.placeholder}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    );
-                  }
+                            <Text
+                              style={{
+                                color: form.kecamatan ? "#000" : "#888",
+                              }}
+                            >
+                              {form.kecamatan || item.placeholder}
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    }
 
-                  // kelurahan
-                  if (item.key === "kelurahan") {
-                    return (
-                      <View>
-                        <Text style={styles.label}>{item.label}</Text>
+                    // kelurahan
+                    if (item.key === "kelurahan") {
+                      return (
+                        <View>
+                          <Text style={styles.label}>{item.label}</Text>
 
-                        <TouchableOpacity
-                          style={styles.input}
-                          onPress={() => {
-                            if (!selectedCamatId) {
-                              alert("Pilih kecamatan dulu");
-                              return;
-                            }
-                            setShowKelurahan(true);
-                          }}
-                        >
-                          <Text
-                            style={{ color: form.kelurahan ? "#000" : "#888" }}
+                          <TouchableOpacity
+                            style={styles.input}
+                            onPress={() => {
+                              if (!selectedCamatId) {
+                                alert("Pilih kecamatan dulu");
+                                return;
+                              }
+                              setShowKelurahan(true);
+                            }}
                           >
-                            {form.kelurahan || item.placeholder}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    );
-                  }
+                            <Text
+                              style={{
+                                color: form.kelurahan ? "#000" : "#888",
+                              }}
+                            >
+                              {form.kelurahan || item.placeholder}
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    }
 
-                  // GOL DARAH
-                  if (item.key === "goldar") {
-                    return (
-                      <View>
-                        <Text style={styles.label}>{item.label}</Text>
+                    // GOL DARAH
+                    if (item.key === "goldar") {
+                      return (
+                        <View>
+                          <Text style={styles.label}>{item.label}</Text>
 
-                        <TouchableOpacity
-                          style={styles.input}
-                          onPress={() => setShowGoldar(true)}
-                        >
-                          <Text
-                            style={{ color: form.goldar ? "#000" : "#888" }}
+                          <TouchableOpacity
+                            style={styles.input}
+                            onPress={() => setShowGoldar(true)}
                           >
-                            {form.goldar
-                              ? `Gol ${form.goldar}`
-                              : item.placeholder}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    );
-                  }
+                            <Text
+                              style={{ color: form.goldar ? "#000" : "#888" }}
+                            >
+                              {form.goldar
+                                ? `Gol ${form.goldar}`
+                                : item.placeholder}
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    }
 
-                  //Kelamin
-                  if (item.key === "jk") {
-                    return (
-                      <View>
-                        <Text style={styles.label}>{item.label}</Text>
+                    //Kelamin
+                    if (item.key === "jk") {
+                      return (
+                        <View>
+                          <Text style={styles.label}>{item.label}</Text>
 
-                        <TouchableOpacity
-                          style={styles.input}
-                          onPress={() => setShowJK(true)}
-                        >
-                          <Text style={{ color: form.jk ? "#000" : "#888" }}>
-                            {form.jk
-                              ? form.jk === "L"
-                                ? "Laki-laki"
-                                : "Perempuan"
-                              : item.placeholder}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    );
-                  }
-
-                  //Status
-                  if (item.key === "status") {
-                    return (
-                      <View>
-                        <Text style={styles.label}>{item.label}</Text>
-
-                        <TouchableOpacity
-                          style={styles.input}
-                          onPress={() => setShowStatus(true)}
-                        >
-                          <Text
-                            style={{ color: form.status ? "#000" : "#888" }}
+                          <TouchableOpacity
+                            style={styles.input}
+                            onPress={() => setShowJK(true)}
                           >
-                            {form.status
-                              ? form.status === 1
-                                ? "Kawin"
-                                : form.status === 2
+                            <Text style={{ color: form.jk ? "#000" : "#888" }}>
+                              {form.jk
+                                ? form.jk === "L"
+                                  ? "Laki-laki"
+                                  : "Perempuan"
+                                : item.placeholder}
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    }
+
+                    //Status
+                    if (item.key === "status") {
+                      return (
+                        <View>
+                          <Text style={styles.label}>{item.label}</Text>
+
+                          <TouchableOpacity
+                            style={styles.input}
+                            onPress={() => setShowStatus(true)}
+                          >
+                            <Text
+                              style={{ color: form.status ? "#000" : "#888" }}
+                            >
+                              {form.status
+                                ? form.status === 1
+                                  ? "Kawin"
+                                  : form.status === 2
                                   ? "Belum Kawin"
                                   : form.status === 3
-                                    ? "Janda"
-                                    : "Duda"
-                              : item.placeholder}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    );
-                  }
-
-                  //Suku
-                  if (item.key === "suku") {
-                    return (
-                      <View>
-                        <Text style={styles.label}>{item.label}</Text>
-
-                        <TouchableOpacity
-                          style={styles.input}
-                          onPress={() => setShowSuku(true)}
-                        >
-                          <Text style={{ color: form.suku ? "#000" : "#888" }}>
-                            {form.suku
-                              ? sukuList.find((x) => x.id === form.suku)
-                                  ?.suku || item.placeholder
-                              : item.placeholder}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    );
-                  }
-
-                  // Agama
-                  if (item.key === "agama") {
-                    return (
-                      <View>
-                        <Text style={styles.label}>{item.label}</Text>
-
-                        <TouchableOpacity
-                          style={styles.input}
-                          onPress={() => setShowAgama(true)}
-                        >
-                          <Text style={{ color: form.agama ? "#000" : "#888" }}>
-                            {form.agama
-                              ? agamaList.find((x) => x.id === form.agama)
-                                  ?.agama || item.placeholder
-                              : item.placeholder}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    );
-                  }
-
-                  //Pendidikan
-                  if (item.key === "pendidikan") {
-                    return (
-                      <View>
-                        <Text style={styles.label}>{item.label}</Text>
-
-                        <TouchableOpacity
-                          style={styles.input}
-                          onPress={() => setShowPendidikan(true)}
-                        >
-                          <Text
-                            style={{ color: form.pendidikan ? "#000" : "#888" }}
-                          >
-                            {form.pendidikan
-                              ? pendidikanList.find(
-                                  (x) => x.id === form.pendidikan,
-                                )?.edu || item.placeholder
-                              : item.placeholder}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    );
-                  }
-
-                  // DEFAULT INPUT
-                  return (
-                    <View>
-                      <Text style={styles.label}>{item.label}</Text>
-
-                      <TextInput
-                        style={styles.input}
-                        placeholder={item.placeholder}
-                        placeholderTextColor="#888"
-                        value={form[item.key]}
-                        onChangeText={(text) =>
-                          setForm({ ...form, [item.key]: text })
-                        }
-                      />
-                    </View>
-                  );
-                }}
-                ListFooterComponent={
-                  <TouchableOpacity
-                    style={styles.submitButton}
-                    onPress={handleSubmit}
-                  >
-                    <Text style={styles.submitText}>Submit</Text>
-                  </TouchableOpacity>
-                }
-              />
-
-              {indicatorHeight > 0 && (
-                <Animated.View
-                  style={[
-                    styles.customScrollbar,
-                    {
-                      height: indicatorHeight,
-                      transform: [{ translateY: indicatorTranslateY }],
-                    },
-                  ]}
-                />
-              )}
-            </View>
-          </View>
-          {/*  Modal Kecamatan */}
-          {showKecamatan && (
-            <Pressable
-              style={styles.dropdownOverlay}
-              onPress={() => setShowKecamatan(false)}
-            >
-              <Pressable
-                style={styles.dropdownModal}
-                onPress={(e) => e.stopPropagation()}
-              >
-                <View style={styles.dropdownScrollWrapper}>
-                  <Animated.ScrollView
-                    style={styles.dropdownScroll}
-                    showsVerticalScrollIndicator={false}
-                    nestedScrollEnabled={true}
-                    scrollEventThrottle={16}
-                    onLayout={(e) =>
-                      setDropdownHeight(e.nativeEvent.layout.height)
+                                  ? "Janda"
+                                  : "Duda"
+                                : item.placeholder}
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      );
                     }
-                    onContentSizeChange={(_, h) => setDropdownContentHeight(h)}
-                    onScroll={Animated.event(
-                      [
-                        {
-                          nativeEvent: {
-                            contentOffset: { y: dropdownScrollY },
+
+                    //Suku
+                    if (item.key === "suku") {
+                      return (
+                        <View>
+                          <Text style={styles.label}>{item.label}</Text>
+
+                          <TouchableOpacity
+                            style={styles.input}
+                            onPress={() => setShowSuku(true)}
+                          >
+                            <Text
+                              style={{ color: form.suku ? "#000" : "#888" }}
+                            >
+                              {form.suku
+                                ? sukuList.find((x) => x.id === form.suku)
+                                    ?.suku || item.placeholder
+                                : item.placeholder}
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    }
+
+                    // Agama
+                    if (item.key === "agama") {
+                      return (
+                        <View>
+                          <Text style={styles.label}>{item.label}</Text>
+
+                          <TouchableOpacity
+                            style={styles.input}
+                            onPress={() => setShowAgama(true)}
+                          >
+                            <Text
+                              style={{ color: form.agama ? "#000" : "#888" }}
+                            >
+                              {form.agama
+                                ? agamaList.find((x) => x.id === form.agama)
+                                    ?.agama || item.placeholder
+                                : item.placeholder}
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    }
+
+                    //Pendidikan
+                    if (item.key === "pendidikan") {
+                      return (
+                        <View>
+                          <Text style={styles.label}>{item.label}</Text>
+
+                          <TouchableOpacity
+                            style={styles.input}
+                            onPress={() => setShowPendidikan(true)}
+                          >
+                            <Text
+                              style={{
+                                color: form.pendidikan ? "#000" : "#888",
+                              }}
+                            >
+                              {form.pendidikan
+                                ? pendidikanList.find(
+                                    (x) => x.id === form.pendidikan
+                                  )?.edu || item.placeholder
+                                : item.placeholder}
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    }
+
+                    // DEFAULT INPUT
+                    return (
+                      <View>
+                        <Text style={styles.label}>{item.label}</Text>
+
+                        <TextInput
+                          ref={(ref) => {
+                            inputRefs.current[item.key] = ref;
+                          }}
+                          style={styles.input}
+                          placeholder={item.placeholder}
+                          placeholderTextColor="#888"
+                          value={String(form[item.key] || "")}
+                          returnKeyType="next"
+                          blurOnSubmit={false}
+                          keyboardType={
+                            item.key === "nik" ||
+                            item.key === "nojkn" ||
+                            item.key === "tlahir" ||
+                            item.key === "telepon"
+                              ? "number-pad"
+                              : "default"
+                          }
+                          onSubmitEditing={() => {
+                            if (item.key === "nik") {
+                              inputRefs.current["nojkn"]?.focus();
+                            } else if (item.key === "nojkn") {
+                              inputRefs.current["nama"]?.focus();
+                            } else if (item.key === "nama") {
+                              setShowKecamatan(true);
+                            } else if (item.key === "alamat") {
+                              formListRef.current?.scrollToOffset({
+                                offset: 360,
+                                animated: true,
+                              });
+
+                              setTimeout(() => {
+                                inputRefs.current["tlahir"]?.focus();
+                              }, 250);
+                            } else if (item.key === "tlahir") {
+                              inputRefs.current["telepon"]?.focus();
+                            } else if (item.key === "telepon") {
+                              inputRefs.current["pekerjaan"]?.focus();
+                            } else if (item.key === "pekerjaan") {
+                              inputRefs.current["suamiistri"]?.focus();
+                            } else if (item.key === "suamiistri") {
+                              inputRefs.current["ayah"]?.focus();
+                            } else if (item.key === "ayah") {
+                              inputRefs.current["pekerjaan_ayah"]?.focus();
+                              setShowGoldar(true);
+                            }
+                          }}
+                          maxLength={
+                            item.key === "nik"
+                              ? 16
+                              : item.key === "nojkn"
+                              ? 13
+                              : item.key === "tlahir"
+                              ? 10
+                              : item.key === "telepon"
+                              ? 15
+                              : undefined
+                          }
+                          onChangeText={(text) => {
+                            let value = text;
+
+                            if (
+                              item.key === "nik" ||
+                              item.key === "nojkn" ||
+                              item.key === "telepon"
+                            ) {
+                              value = text.replace(/[^0-9]/g, "");
+                            }
+
+                            if (item.key === "tlahir") {
+                              value = text.replace(/[^0-9]/g, "").slice(0, 8);
+
+                              if (value.length >= 5) {
+                                value = `${value.slice(0, 2)}-${value.slice(
+                                  2,
+                                  4
+                                )}-${value.slice(4)}`;
+                              } else if (value.length >= 3) {
+                                value = `${value.slice(0, 2)}-${value.slice(
+                                  2
+                                )}`;
+                              }
+                            }
+
+                            setForm({
+                              ...form,
+                              [item.key]: value,
+                            });
+                          }}
+                        />
+                      </View>
+                    );
+                  }}
+                  ListFooterComponent={
+                    <TouchableOpacity
+                      ref={submitButtonRef}
+                      style={styles.submitButton}
+                      onPress={handleSubmit}
+                    >
+                      <Text style={styles.submitText}>Submit</Text>
+                    </TouchableOpacity>
+                  }
+                />
+
+                {indicatorHeight > 0 && (
+                  <Animated.View
+                    style={[
+                      styles.customScrollbar,
+                      {
+                        height: indicatorHeight,
+                        transform: [{ translateY: indicatorTranslateY }],
+                      },
+                    ]}
+                  />
+                )}
+              </View>
+            </View>
+            {/*  Modal Kecamatan */}
+            {showKecamatan && (
+              <Pressable
+                style={styles.dropdownOverlay}
+                onPress={() => setShowKecamatan(false)}
+              >
+                <Pressable
+                  style={styles.dropdownModal}
+                  onPress={(e) => e.stopPropagation()}
+                >
+                  <View style={styles.dropdownScrollWrapper}>
+                    <Animated.ScrollView
+                      style={styles.dropdownScroll}
+                      showsVerticalScrollIndicator={false}
+                      nestedScrollEnabled={true}
+                      scrollEventThrottle={16}
+                      onLayout={(e) =>
+                        setDropdownHeight(e.nativeEvent.layout.height)
+                      }
+                      onContentSizeChange={(_, h) =>
+                        setDropdownContentHeight(h)
+                      }
+                      onScroll={Animated.event(
+                        [
+                          {
+                            nativeEvent: {
+                              contentOffset: { y: dropdownScrollY },
+                            },
                           },
-                        },
-                      ],
-                      { useNativeDriver: false },
+                        ],
+                        { useNativeDriver: false }
+                      )}
+                    >
+                      {kecamatanList.map((item) => (
+                        <TouchableOpacity
+                          key={item.id}
+                          style={styles.dropdownItem}
+                          onPress={() => {
+                            setForm((prev) => ({
+                              ...prev,
+                              kecamatan: item.kecamatan,
+                              kelurahan: "",
+                            }));
+
+                            setSelectedCamatId(item.id);
+                            setShowKecamatan(false);
+                            loadKelurahan(item.id);
+
+                            setTimeout(() => {
+                              setShowKelurahan(true);
+                            }, 200);
+                          }}
+                        >
+                          <Text style={{ fontSize: 16 }}>{item.kecamatan}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </Animated.ScrollView>
+
+                    {dropdownIndicatorHeight > 0 && (
+                      <Animated.View
+                        style={[
+                          styles.dropdownCustomScrollbar,
+                          {
+                            height: dropdownIndicatorHeight,
+                            transform: [
+                              { translateY: dropdownIndicatorTranslateY },
+                            ],
+                          },
+                        ]}
+                      />
                     )}
-                  >
-                    {kecamatanList.map((item) => (
+                  </View>
+
+                  <TouchableOpacity onPress={() => setShowKecamatan(false)}>
+                    <Text style={styles.cancelText}>Batal</Text>
+                  </TouchableOpacity>
+                </Pressable>
+              </Pressable>
+            )}
+            {/*  Modal Kelurahan */}
+            {showKelurahan && (
+              <Pressable
+                style={styles.dropdownOverlay}
+                onPress={() => setShowKelurahan(false)}
+              >
+                <Pressable
+                  style={styles.dropdownModal}
+                  onPress={(e) => e.stopPropagation()}
+                >
+                  <View style={styles.dropdownScrollWrapper}>
+                    <Animated.ScrollView
+                      style={styles.dropdownScroll}
+                      showsVerticalScrollIndicator={false}
+                      nestedScrollEnabled={true}
+                      scrollEventThrottle={16}
+                      onLayout={(e) =>
+                        setDropdownHeight(e.nativeEvent.layout.height)
+                      }
+                      onContentSizeChange={(_, h) =>
+                        setDropdownContentHeight(h)
+                      }
+                      onScroll={Animated.event(
+                        [
+                          {
+                            nativeEvent: {
+                              contentOffset: { y: dropdownScrollY },
+                            },
+                          },
+                        ],
+                        { useNativeDriver: false }
+                      )}
+                    >
+                      {kelurahanList.map((item) => (
+                        <TouchableOpacity
+                          key={item.id}
+                          style={styles.dropdownItem}
+                          onPress={() => {
+                            setForm((prev) => ({
+                              ...prev,
+                              kelurahan: item.lurah,
+                            }));
+
+                            setShowKelurahan(false);
+
+                            setTimeout(() => {
+                              formListRef.current?.scrollToOffset({
+                                offset: 260,
+                                animated: true,
+                              });
+
+                              setTimeout(() => {
+                                inputRefs.current["alamat"]?.focus();
+                              }, 250);
+                            }, 300);
+                          }}
+                        >
+                          <Text style={{ fontSize: 16 }}>{item.lurah}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </Animated.ScrollView>
+
+                    {dropdownIndicatorHeight > 0 && (
+                      <Animated.View
+                        style={[
+                          styles.dropdownCustomScrollbar,
+                          {
+                            height: dropdownIndicatorHeight,
+                            transform: [
+                              { translateY: dropdownIndicatorTranslateY },
+                            ],
+                          },
+                        ]}
+                      />
+                    )}
+                  </View>
+
+                  <TouchableOpacity onPress={() => setShowKelurahan(false)}>
+                    <Text style={styles.cancelText}>Batal</Text>
+                  </TouchableOpacity>
+                </Pressable>
+              </Pressable>
+            )}
+            {/*  Modal Goldar */}
+            {showGoldar && (
+              <Pressable
+                style={styles.dropdownOverlay}
+                onPress={() => setShowGoldar(false)} // klik luar close
+              >
+                <Pressable
+                  style={styles.dropdownModal}
+                  onPress={(e) => e.stopPropagation()} // klik dalam tidak close
+                >
+                  {["A", "B", "AB", "O", "N/A"].map((item) => (
+                    <TouchableOpacity
+                      key={item}
+                      style={styles.dropdownItem}
+                      onPress={() => {
+                        setForm((prev) => ({ ...prev, goldar: item }));
+                        setShowGoldar(false);
+
+                        setTimeout(() => {
+                          setShowJK(true);
+                        }, 200);
+                      }}
+                    >
+                      <Text style={{ fontSize: 16, textAlign: "left" }}>
+                        {`Gol ${item}`}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+
+                  <TouchableOpacity onPress={() => setShowGoldar(false)}>
+                    <Text style={styles.cancelText}>Batal</Text>
+                  </TouchableOpacity>
+                </Pressable>
+              </Pressable>
+            )}
+            {/*  Modal JK */}
+            {showJK && (
+              <Pressable
+                style={styles.dropdownOverlay}
+                onPress={() => setShowJK(false)}
+              >
+                <Pressable
+                  style={styles.dropdownModal}
+                  onPress={(e) => e.stopPropagation()}
+                >
+                  {[
+                    { label: "Laki-laki", value: "L" },
+                    { label: "Perempuan", value: "P" },
+                  ].map((item) => (
+                    <TouchableOpacity
+                      key={item.value}
+                      style={styles.dropdownItem}
+                      onPress={() => {
+                        setForm((prev) => ({ ...prev, jk: item.value }));
+                        setShowJK(false);
+
+                        setTimeout(() => {
+                          setShowStatus(true);
+                        }, 200);
+                      }}
+                    >
+                      <Text style={{ fontSize: 16 }}>{item.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+
+                  <TouchableOpacity onPress={() => setShowJK(false)}>
+                    <Text style={styles.cancelText}>Batal</Text>
+                  </TouchableOpacity>
+                </Pressable>
+              </Pressable>
+            )}
+            {/*  Modal status */}
+            {showStatus && (
+              <Pressable
+                style={styles.dropdownOverlay}
+                onPress={() => setShowStatus(false)}
+              >
+                <Pressable
+                  style={styles.dropdownModal}
+                  onPress={(e) => e.stopPropagation()}
+                >
+                  {[
+                    { label: "Kawin", value: 1 },
+                    { label: "Belum Kawin", value: 2 },
+                    { label: "Janda", value: 3 },
+                    { label: "Duda", value: 4 },
+                  ].map((item) => (
+                    <TouchableOpacity
+                      key={item.value}
+                      style={styles.dropdownItem}
+                      onPress={() => {
+                        setForm((prev) => ({ ...prev, status: item.value }));
+                        setShowStatus(false);
+
+                        setTimeout(() => {
+                          setShowSuku(true);
+                        }, 200);
+                      }}
+                    >
+                      <Text style={{ fontSize: 16 }}>{item.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+
+                  <TouchableOpacity onPress={() => setShowStatus(false)}>
+                    <Text style={styles.cancelText}>Batal</Text>
+                  </TouchableOpacity>
+                </Pressable>
+              </Pressable>
+            )}
+            {/*  Modal suku */}
+            {showSuku && (
+              <Pressable
+                style={styles.dropdownOverlay}
+                onPress={() => setShowSuku(false)}
+              >
+                <Pressable
+                  style={styles.dropdownModal}
+                  onPress={(e) => e.stopPropagation()}
+                >
+                  <ScrollView style={{ maxHeight: 400 }}>
+                    {sukuList.map((item) => (
+                      <TouchableOpacity
+                        key={item.id}
+                        style={styles.dropdownItem}
+                        onPress={() => {
+                          setForm((prev) => ({ ...prev, suku: item.id }));
+                          setShowSuku(false);
+
+                          setTimeout(() => setShowAgama(true), 200);
+                        }}
+                      >
+                        <Text style={{ fontSize: 16 }}>{item.suku}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+
+                  <TouchableOpacity onPress={() => setShowSuku(false)}>
+                    <Text style={styles.cancelText}>Batal</Text>
+                  </TouchableOpacity>
+                </Pressable>
+              </Pressable>
+            )}
+            {/*  Modal Agama */}
+            {showAgama && (
+              <Pressable
+                style={styles.dropdownOverlay}
+                onPress={() => setShowAgama(false)}
+              >
+                <Pressable style={styles.dropdownModal}>
+                  <ScrollView style={{ maxHeight: 400 }}>
+                    {agamaList.map((item) => (
+                      <TouchableOpacity
+                        key={item.id}
+                        style={styles.dropdownItem}
+                        onPress={() => {
+                          setForm((prev) => ({ ...prev, agama: item.id }));
+                          setShowAgama(false);
+
+                          setTimeout(() => setShowPendidikan(true), 200);
+                        }}
+                      >
+                        <Text style={{ fontSize: 16 }}>{item.agama}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+
+                  <TouchableOpacity onPress={() => setShowAgama(false)}>
+                    <Text style={styles.cancelText}>Batal</Text>
+                  </TouchableOpacity>
+                </Pressable>
+              </Pressable>
+            )}
+            {/*  Modal Pendidikan */}
+            {showPendidikan && (
+              <Pressable
+                style={styles.dropdownOverlay}
+                onPress={() => setShowPendidikan(false)}
+              >
+                <Pressable style={styles.dropdownModal}>
+                  <ScrollView style={{ maxHeight: 400 }}>
+                    {pendidikanList.map((item) => (
                       <TouchableOpacity
                         key={item.id}
                         style={styles.dropdownItem}
                         onPress={() => {
                           setForm((prev) => ({
                             ...prev,
-                            kecamatan: item.kecamatan,
-                            kelurahan: "",
+                            pendidikan: item.id,
                           }));
 
-                          setSelectedCamatId(item.id);
-                          setShowKecamatan(false);
-                          loadKelurahan(item.id);
+                          setShowPendidikan(false);
 
                           setTimeout(() => {
-                            setShowKelurahan(true);
-                          }, 200);
+                            formListRef.current?.scrollToEnd({
+                              animated: true,
+                            });
+                          }, 300);
                         }}
                       >
-                        <Text style={{ fontSize: 16 }}>{item.kecamatan}</Text>
+                        <Text style={{ fontSize: 16 }}>{item.edu}</Text>
                       </TouchableOpacity>
                     ))}
-                  </Animated.ScrollView>
+                  </ScrollView>
 
-                  {dropdownIndicatorHeight > 0 && (
-                    <Animated.View
-                      style={[
-                        styles.dropdownCustomScrollbar,
-                        {
-                          height: dropdownIndicatorHeight,
-                          transform: [
-                            { translateY: dropdownIndicatorTranslateY },
-                          ],
-                        },
-                      ]}
-                    />
-                  )}
-                </View>
-
-                <TouchableOpacity onPress={() => setShowKecamatan(false)}>
-                  <Text style={styles.cancelText}>Batal</Text>
-                </TouchableOpacity>
-              </Pressable>
-            </Pressable>
-          )}
-          {/*  Modal Kelurahan */}
-          {showKelurahan && (
-            <Pressable
-              style={styles.dropdownOverlay}
-              onPress={() => setShowKelurahan(false)}
-            >
-              <Pressable
-                style={styles.dropdownModal}
-                onPress={(e) => e.stopPropagation()}
-              >
-                <View style={styles.dropdownScrollWrapper}>
-                  <Animated.ScrollView
-                    style={styles.dropdownScroll}
-                    showsVerticalScrollIndicator={false}
-                    nestedScrollEnabled={true}
-                    scrollEventThrottle={16}
-                    onLayout={(e) =>
-                      setDropdownHeight(e.nativeEvent.layout.height)
-                    }
-                    onContentSizeChange={(_, h) => setDropdownContentHeight(h)}
-                    onScroll={Animated.event(
-                      [
-                        {
-                          nativeEvent: {
-                            contentOffset: { y: dropdownScrollY },
-                          },
-                        },
-                      ],
-                      { useNativeDriver: false },
-                    )}
-                  >
-                    {kelurahanList.map((item) => (
-                      <TouchableOpacity
-                        key={item.id}
-                        style={styles.dropdownItem}
-                        onPress={() => {
-                          setForm((prev) => ({
-                            ...prev,
-                            kelurahan: item.lurah,
-                          }));
-
-                          setShowKelurahan(false);
-                        }}
-                      >
-                        <Text style={{ fontSize: 16 }}>{item.lurah}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </Animated.ScrollView>
-
-                  {dropdownIndicatorHeight > 0 && (
-                    <Animated.View
-                      style={[
-                        styles.dropdownCustomScrollbar,
-                        {
-                          height: dropdownIndicatorHeight,
-                          transform: [
-                            { translateY: dropdownIndicatorTranslateY },
-                          ],
-                        },
-                      ]}
-                    />
-                  )}
-                </View>
-
-                <TouchableOpacity onPress={() => setShowKelurahan(false)}>
-                  <Text style={styles.cancelText}>Batal</Text>
-                </TouchableOpacity>
-              </Pressable>
-            </Pressable>
-          )}
-          {/*  Modal Goldar */}
-          {showGoldar && (
-            <Pressable
-              style={styles.dropdownOverlay}
-              onPress={() => setShowGoldar(false)} // klik luar close
-            >
-              <Pressable
-                style={styles.dropdownModal}
-                onPress={(e) => e.stopPropagation()} // klik dalam tidak close
-              >
-                {["A", "B", "AB", "O", "N/A"].map((item) => (
-                  <TouchableOpacity
-                    key={item}
-                    style={styles.dropdownItem}
-                    onPress={() => {
-                      setForm((prev) => ({ ...prev, goldar: item }));
-                      setShowGoldar(false);
-
-                      setTimeout(() => {
-                        setShowJK(true);
-                      }, 200);
-                    }}
-                  >
-                    <Text style={{ fontSize: 16, textAlign: "left" }}>
-                      {`Gol ${item}`}
-                    </Text>
+                  <TouchableOpacity onPress={() => setShowPendidikan(false)}>
+                    <Text style={styles.cancelText}>Batal</Text>
                   </TouchableOpacity>
-                ))}
-
-                <TouchableOpacity onPress={() => setShowGoldar(false)}>
-                  <Text style={styles.cancelText}>Batal</Text>
-                </TouchableOpacity>
+                </Pressable>
               </Pressable>
-            </Pressable>
-          )}
-          {/*  Modal JK */}
-          {showJK && (
-            <Pressable
-              style={styles.dropdownOverlay}
-              onPress={() => setShowJK(false)}
+            )}
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+       {/*  Modal Sukses daftar RM */}
+      <Modal visible={showSuccess} transparent animationType="fade">
+        <View style={styles.successOverlay}>
+          <View style={styles.successBox}>
+            <View style={styles.successIcon}>
+              <Ionicons name="checkmark" size={42} color="#fff" />
+            </View>
+
+            <Text style={styles.successTitle}>Pendaftaran Berhasil</Text>
+
+            <Text style={styles.successDesc}>
+              Permintaan nomor rekam medis berhasil dikirim. Silakan menunggu
+              proses verifikasi dari RS 'Aisyiyah Bojonegoro.
+            </Text>
+
+            <TouchableOpacity
+              style={styles.successButton}
+              onPress={() => setShowSuccess(false)}
             >
-              <Pressable
-                style={styles.dropdownModal}
-                onPress={(e) => e.stopPropagation()}
-              >
-                {[
-                  { label: "Laki-laki", value: "L" },
-                  { label: "Perempuan", value: "P" },
-                ].map((item) => (
-                  <TouchableOpacity
-                    key={item.value}
-                    style={styles.dropdownItem}
-                    onPress={() => {
-                      setForm((prev) => ({ ...prev, jk: item.value }));
-                      setShowJK(false);
-
-                      setTimeout(() => {
-                        setShowStatus(true);
-                      }, 200);
-                    }}
-                  >
-                    <Text style={{ fontSize: 16 }}>{item.label}</Text>
-                  </TouchableOpacity>
-                ))}
-
-                <TouchableOpacity onPress={() => setShowJK(false)}>
-                  <Text style={styles.cancelText}>Batal</Text>
-                </TouchableOpacity>
-              </Pressable>
-            </Pressable>
-          )}
-          {/*  Modal status */}
-          {showStatus && (
-            <Pressable
-              style={styles.dropdownOverlay}
-              onPress={() => setShowStatus(false)}
-            >
-              <Pressable
-                style={styles.dropdownModal}
-                onPress={(e) => e.stopPropagation()}
-              >
-                {[
-                  { label: "Kawin", value: 1 },
-                  { label: "Belum Kawin", value: 2 },
-                  { label: "Janda", value: 3 },
-                  { label: "Duda", value: 4 },
-                ].map((item) => (
-                  <TouchableOpacity
-                    key={item.value}
-                    style={styles.dropdownItem}
-                    onPress={() => {
-                      setForm((prev) => ({ ...prev, status: item.value }));
-                      setShowStatus(false);
-
-                      setTimeout(() => {
-                        setShowSuku(true);
-                      }, 200);
-                    }}
-                  >
-                    <Text style={{ fontSize: 16 }}>{item.label}</Text>
-                  </TouchableOpacity>
-                ))}
-
-                <TouchableOpacity onPress={() => setShowStatus(false)}>
-                  <Text style={styles.cancelText}>Batal</Text>
-                </TouchableOpacity>
-              </Pressable>
-            </Pressable>
-          )}
-          {/*  Modal suku */}
-          {showSuku && (
-            <Pressable
-              style={styles.dropdownOverlay}
-              onPress={() => setShowSuku(false)}
-            >
-              <Pressable
-                style={styles.dropdownModal}
-                onPress={(e) => e.stopPropagation()}
-              >
-                <ScrollView style={{ maxHeight: 400 }}>
-                  {sukuList.map((item) => (
-                    <TouchableOpacity
-                      key={item.id}
-                      style={styles.dropdownItem}
-                      onPress={() => {
-                        setForm((prev) => ({ ...prev, suku: item.id }));
-                        setShowSuku(false);
-
-                        setTimeout(() => setShowAgama(true), 200);
-                      }}
-                    >
-                      <Text style={{ fontSize: 16 }}>{item.suku}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-
-                <TouchableOpacity onPress={() => setShowSuku(false)}>
-                  <Text style={styles.cancelText}>Batal</Text>
-                </TouchableOpacity>
-              </Pressable>
-            </Pressable>
-          )}
-          {/*  Modal Agama */}
-          {showAgama && (
-            <Pressable
-              style={styles.dropdownOverlay}
-              onPress={() => setShowAgama(false)}
-            >
-              <Pressable style={styles.dropdownModal}>
-                <ScrollView style={{ maxHeight: 400 }}>
-                  {agamaList.map((item) => (
-                    <TouchableOpacity
-                      key={item.id}
-                      style={styles.dropdownItem}
-                      onPress={() => {
-                        setForm((prev) => ({ ...prev, agama: item.id }));
-                        setShowAgama(false);
-
-                        setTimeout(() => setShowPendidikan(true), 200);
-                      }}
-                    >
-                      <Text style={{ fontSize: 16 }}>{item.agama}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-
-                <TouchableOpacity onPress={() => setShowAgama(false)}>
-                  <Text style={styles.cancelText}>Batal</Text>
-                </TouchableOpacity>
-              </Pressable>
-            </Pressable>
-          )}
-          {/*  Modal Pendidikan */}
-          {showPendidikan && (
-            <Pressable
-              style={styles.dropdownOverlay}
-              onPress={() => setShowPendidikan(false)}
-            >
-              <Pressable style={styles.dropdownModal}>
-                <ScrollView style={{ maxHeight: 400 }}>
-                  {pendidikanList.map((item) => (
-                    <TouchableOpacity
-                      key={item.id}
-                      style={styles.dropdownItem}
-                      onPress={() => {
-                        setForm((prev) => ({ ...prev, pendidikan: item.id }));
-                        setShowPendidikan(false);
-                      }}
-                    >
-                      <Text style={{ fontSize: 16 }}>{item.edu}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-
-                <TouchableOpacity onPress={() => setShowPendidikan(false)}>
-                  <Text style={styles.cancelText}>Batal</Text>
-                </TouchableOpacity>
-              </Pressable>
-            </Pressable>
-          )}
+              <Text style={styles.successButtonText}>Tutup</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
     </View>
@@ -1051,46 +1273,22 @@ export default function PendaftaranRM() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-
   header: {
-    backgroundColor: "#087987",
-    paddingTop: 32,
+    backgroundColor: "#0A7C86",
+    paddingTop: 38,
     paddingBottom: 10,
     alignItems: "center",
     justifyContent: "center",
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    elevation: 6,
   },
 
   backButton: {
     position: "absolute",
     left: 12,
-    top: 34,
+    top: 45,
     zIndex: 10,
-  },
-
-  headerTitle: {
-    color: "#fff",
-    fontSize: 17,
-    fontWeight: "700",
-  },
-
-  headerSubtitle: {
-    color: "#fff",
-    fontSize: 14,
-    marginTop: 1,
-  },
-
-  addButton: {
-    backgroundColor: "#D89200",
-    marginHorizontal: 10,
-    marginTop: 10,
-    borderRadius: 6,
-    paddingVertical: 9,
-    alignItems: "center",
-    elevation: 2,
   },
 
   addButtonText: {
@@ -1099,52 +1297,14 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  patientCard: {
-    marginTop: 18,
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-
   patientInfo: {
     flex: 1,
   },
 
-  patientName: {
-    fontSize: 18,
-    color: "#111",
-    fontWeight: "500",
-    marginBottom: 3,
-  },
-
-  patientText: {
-    fontSize: 14,
-    color: "#333",
-  },
-
-  rmText: {
-    fontSize: 15,
-    color: "#333",
-    marginTop: 2,
-    fontWeight: "600",
-  },
-
-  rmButton: {
-    backgroundColor: "#0A9A9A",
-    paddingVertical: 6,
-    paddingHorizontal: 16,
-    borderRadius: 6,
-    marginLeft: 10,
-  },
-
   rmButtonText: {
-    color: "#fff",
-    fontSize: 13,
-    fontWeight: "600",
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0.4,
   },
 
   emptyBox: {
@@ -1168,13 +1328,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: "rgba(0,0,0,0.25)",
     justifyContent: "flex-end",
-  },
-
-  detailBox: {
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
-    padding: 16,
   },
 
   closeText: {
@@ -1217,21 +1370,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  formBox: {
-    backgroundColor: "#fff",
-    height: "85%",
-    paddingHorizontal: 10,
-    paddingTop: 6,
-    paddingBottom: 0,
-  },
-
   formScroll: {
     flex: 1,
     backgroundColor: "#fff",
   },
 
   formScrollContent: {
-    paddingBottom: 220,
+    paddingBottom: 320,
   },
 
   formClose: {
@@ -1242,34 +1387,9 @@ const styles = StyleSheet.create({
     borderBottomColor: "#087987",
   },
 
-  label: {
-    fontSize: 13,
-    color: "#777",
-    marginTop: 7,
-    marginBottom: 3,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 4,
-    paddingHorizontal: 10,
-    height: 36,
-    backgroundColor: "#fff",
-    justifyContent: "center",
-  },
-
   inputText: {
     fontSize: 14,
     color: "#000",
-  },
-
-  submitButton: {
-    backgroundColor: "#087987",
-    marginTop: 14,
-    marginBottom: 8,
-    borderRadius: 5,
-    paddingVertical: 10,
-    alignItems: "center",
   },
 
   submitText: {
@@ -1303,27 +1423,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  dropdownItem: {
-    paddingVertical: 12,
-    alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-
   cancelText: {
     textAlign: "center",
     marginTop: 10,
     color: "red",
     fontWeight: "600",
-  },
-
-  dropdownModal: {
-    width: "85%",
-    maxHeight: "70%",
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 10,
-    elevation: 6,
   },
 
   dropdownScrollWrapper: {
@@ -1342,5 +1446,187 @@ const styles = StyleSheet.create({
     width: 5,
     borderRadius: 10,
     backgroundColor: "#087987",
+  },
+
+  container: {
+    flex: 1,
+    backgroundColor: "#EEF5F5",
+  },
+
+  headerTitle: {
+    color: "#fff",
+    fontSize: 23,
+    fontWeight: "800",
+  },
+
+  headerSubtitle: {
+    color: "#D9FFFF",
+    fontSize: 13,
+    marginTop: 4,
+  },
+
+  addButton: {
+    backgroundColor: "#D89200",
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: "center",
+    elevation: 3,
+  },
+
+  patientCard: {
+    backgroundColor: "#fff",
+    marginHorizontal: 16,
+    marginTop: 14,
+    borderRadius: 18,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    elevation: 4,
+  },
+
+  patientName: {
+    fontSize: 18,
+    color: "#0A2E35",
+    fontWeight: "800",
+    marginBottom: 5,
+  },
+
+  patientText: {
+    fontSize: 14,
+    color: "#667",
+  },
+
+  rmText: {
+    fontSize: 15,
+    color: "#0A7C86",
+    marginTop: 4,
+    fontWeight: "800",
+  },
+
+  rmButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  detailBox: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 18,
+  },
+
+  formBox: {
+    backgroundColor: "#fff",
+    height: "88%",
+    paddingHorizontal: 18,
+    paddingTop: 12,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+
+  input: {
+    borderWidth: 1,
+    borderColor: "#D8E2E3",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    minHeight: 48,
+    backgroundColor: "#FAFFFF",
+    justifyContent: "center",
+  },
+
+  label: {
+    fontSize: 13,
+    color: "#566",
+    marginTop: 12,
+    marginBottom: 6,
+    fontWeight: "700",
+  },
+
+  submitButton: {
+    backgroundColor: "#087987",
+    marginTop: 18,
+    marginBottom: 25,
+    borderRadius: 16,
+    paddingVertical: 16,
+    alignItems: "center",
+    elevation: 4,
+  },
+
+  dropdownModal: {
+    width: "88%",
+    maxHeight: "72%",
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 16,
+    elevation: 8,
+  },
+
+  dropdownItem: {
+    paddingVertical: 15,
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#EEF1F1",
+  },
+
+  successOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+
+  successBox: {
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 26,
+    paddingHorizontal: 24,
+    paddingVertical: 28,
+    alignItems: "center",
+    elevation: 10,
+  },
+
+  successIcon: {
+    width: 82,
+    height: 82,
+    borderRadius: 41,
+    backgroundColor: "#0A7C86",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 18,
+  },
+
+  successTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#10343A",
+    marginBottom: 10,
+  },
+
+  successDesc: {
+    fontSize: 14,
+    color: "#667",
+    textAlign: "center",
+    lineHeight: 23,
+  },
+
+  successButton: {
+    marginTop: 24,
+    backgroundColor: "#0A7C86",
+    paddingHorizontal: 34,
+    paddingVertical: 14,
+    borderRadius: 14,
+  },
+
+  successButtonText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "800",
   },
 });

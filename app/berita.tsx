@@ -38,7 +38,7 @@ export default function InformasiBerita() {
       setLoading(true);
 
       const res = await fetch(
-        'http://app.rsabojonegoro.com:4000/his/about/berita'
+        'http://app.rsabojonegoro.com:5000/his/about/berita'
       );
 
       const json = await res.json();
@@ -139,12 +139,14 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    backgroundColor: '#0A7C86',
+    backgroundColor: "#0A7C86",
     paddingTop: 30,
-    paddingBottom: 12,
-    paddingHorizontal: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
+    paddingBottom: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    elevation: 6,
   },
 
   headerCenter: {
@@ -154,7 +156,7 @@ const styles = StyleSheet.create({
   backButton: {
     position: 'absolute',
     left: 14,
-    top: 32,
+    top: 40,
     zIndex: 10,
   },
 

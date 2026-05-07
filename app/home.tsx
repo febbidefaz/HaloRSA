@@ -152,7 +152,7 @@ export default function Index() {
   const loadSlide = async () => {
     try {
       const res = await fetch(
-        "http://app.rsabojonegoro.com:4000/his/about/slide",
+        "http://app.rsabojonegoro.com:5000/his/about/slide",
       );
       // console.log('status slide:', res.status);
       const json = await res.json();

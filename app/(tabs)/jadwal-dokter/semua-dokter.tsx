@@ -28,7 +28,7 @@ export default function SemuaDokter() {
     const loadSpecialist = async () => {
       try {
         const res = await fetch(
-          'http://app.rsabojonegoro.com:4000/his/new/Specialist'
+          'http://app.rsabojonegoro.com:5000/his/new/Specialist'
         );
         const json = await res.json();
         setData(json || []);
@@ -56,7 +56,7 @@ export default function SemuaDokter() {
         onPress={() => router.back()}
         style={styles.backButton}
       >
-        <Ionicons name="arrow-back" size={24} color="#fff" />
+        <Ionicons name="chevron-back" size={30} color="#fff" />
       </TouchableOpacity>
 
       <Text style={styles.headerTitle}>Jadwal Dokter Spesialis</Text>
@@ -118,12 +118,14 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    backgroundColor: '#0A7C86',
-    paddingTop: 34,
-    paddingBottom: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 3,
+    backgroundColor: "#0A7C86",
+    paddingTop: 38,
+    paddingBottom: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    elevation: 6,
   },
   
   backButton: {

@@ -86,7 +86,7 @@ export default function AntrianObatScreen() {
           onPress={() => router.back()}
           style={styles.backButton}
         >
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+          <Ionicons name="chevron-back" size={30} color="#fff" />
         </TouchableOpacity>
 
         <Text style={styles.title}>Antrian Obat</Text>
@@ -139,9 +139,12 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: "#0A7C86",
     paddingTop: 38,
-    paddingBottom: 18,
+    paddingBottom: 10,
     alignItems: "center",
     justifyContent: "center",
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    elevation: 6,
   },
 
   title: {
@@ -231,7 +234,7 @@ const styles = StyleSheet.create({
 
   backButton: {
     position: "absolute",
-    left: 14,
+    left: 5,
     top: 50, // sesuaikan dengan paddingTop header
     zIndex: 10,
   },
