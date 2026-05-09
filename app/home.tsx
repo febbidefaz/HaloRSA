@@ -16,6 +16,8 @@ import {
   View,
 } from "react-native";
 import Carousel from "react-native-reanimated-carousel";
+import { registerForPushNotificationsAsync } from "../utils/notifications";
+console.log("FILE HOME LOAD");
 
 const menuItems = [
   {
@@ -133,6 +135,15 @@ export default function Index() {
 
       const n = await SecureStore.getItemAsync("google_name");
       if (n) setName(n);
+
+      console.log("MULAI REGISTER NOTIF");
+
+      const pushToken =
+        await registerForPushNotificationsAsync();
+      
+      console.log("TOKEN HASIL:", pushToken);
+
+      console.log("EXPO TOKEN:", pushToken);
 
       setLoading(false);
     };

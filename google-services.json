@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "306299116555",
+    "project_id": "notif-halo-rsa",
+    "storage_bucket": "notif-halo-rsa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:306299116555:android:fe88597e8e9f55ead5fb0e",
+        "android_client_info": {
+          "package_name": "com.rsa.halorsa"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDw2ouXReYshJZFS2x3eQ2xMEtvQjHpgys"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -22,7 +22,7 @@ export default function LoginScreen() {
   const redirectUri = useMemo(() => {
     return makeRedirectUri({
       native:
-        'com.googleusercontent.apps.656827986979-102opc80tg1958j8budbc0t6ca0m6sgf:/oauthredirect',
+      "com.googleusercontent.apps.656827986979-102opc80tg1958j8budbc0t6ca0m6sgf:/",
     });
   }, []);
 
@@ -34,6 +34,7 @@ export default function LoginScreen() {
     scopes: ['profile', 'email'],
     redirectUri,
   });
+  console.log("LOGIN RESPONSE:", response);
 
   useEffect(() => {
     console.log('redirectUri =', redirectUri);
@@ -131,7 +132,11 @@ export default function LoginScreen() {
             loading && { opacity: 0.7 },
           ]}
           disabled={!request || loading}
-          onPress={() => promptAsync()}
+          onPress={() =>
+            promptAsync({
+              showInRecents: true,
+            })
+          }
           activeOpacity={0.85}
         >
           {loading ? (

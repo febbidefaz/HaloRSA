@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "HaloRSA",
+    "name": "Halo RSA",
     "slug": "HaloRSA",
     "version": "1.0.0",
     "orientation": "portrait",    
@@ -16,15 +16,14 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/logorsa.png",
-        "backgroundImage": "./assets/images/logorsa.png",
-        "monochromeImage": "./assets/images/logorsa.png"
+        "backgroundColor": "#ffffff",
+        "foregroundImage": "./assets/images/icon.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "usesCleartextTraffic": true,
-      "package": "com.rsa.halorsa"
+      "package": "com.rsa.halorsa",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static",
@@ -45,7 +44,8 @@
         }
       ],
       "expo-web-browser",
-      "expo-secure-store"
+      "expo-secure-store" ,
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true,
