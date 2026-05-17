@@ -84,7 +84,7 @@ export default function KritikSaran() {
     const loadPelayanan = async () => {
       try {
         const res = await fetch(
-          'http://app.rsabojonegoro.com:5000/his/about/pelayanan'
+          'https://api.rsabojonegoro.com:5010/his/about/pelayanan'
         );
 
         const json = await res.json();
@@ -110,7 +110,7 @@ export default function KritikSaran() {
         setLoadingUnit(true);
 
         const res = await fetch(
-          `http://app.rsabojonegoro.com:5000/his/about/unit/pelayanan?pelayanan=${pelayanan}`
+          `https://api.rsabojonegoro.com:5010/his/about/unit/pelayanan?pelayanan=${pelayanan}`
         );
 
         const json = await res.json();
@@ -200,7 +200,7 @@ export default function KritikSaran() {
       };
 
       const res = await fetch(
-        'http://app.rsabojonegoro.com:5000/his/about/newsurvey',
+        'https://api.rsabojonegoro.com:5010/his/about/newsurvey',
         {
           method: 'POST',
           headers: {

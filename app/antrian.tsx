@@ -40,7 +40,7 @@ export default function AntrianScreen() {
   const loadData = async () => {
     try {
       const queueRes = await fetch(
-        "http://app.rsabojonegoro.com:5000/his/quepx",
+        "https://api.rsabojonegoro.com:5010/his/quepx",
       );
       const queueJson = await queueRes.json();
 
@@ -121,8 +121,8 @@ export default function AntrianScreen() {
         }
         renderItem={({ item }) => (
           <View style={styles.card}>
-            <Image
-              source={`http://app.rsabojonegoro.com:1111/foto/clinic/${item.idpoli}.png`}
+            <Image          
+              source={`https://api.rsabojonegoro.com/assets/foto/clinic/${item.idpoli}.png`}
               style={styles.icon}
               contentFit="cover"
               cachePolicy="disk"

@@ -25,7 +25,7 @@ export default function KonsultasiScreen() {
   const loadWA = async () => {
     try {
       const res = await fetch(      
-        "http://app.rsabojonegoro.com:5000/his/new/NoWAAndroid",
+        "https://api.rsabojonegoro.com:5010/his/new/NoWAAndroid",
       );
       const json = await res.json();
 

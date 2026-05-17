@@ -38,7 +38,7 @@ export default function InformasiBerita() {
       setLoading(true);
 
       const res = await fetch(
-        'http://app.rsabojonegoro.com:5000/his/about/berita'
+        'https://api.rsabojonegoro.com:5010/his/about/berita'
       );
 
       const json = await res.json();
@@ -94,7 +94,7 @@ export default function InformasiBerita() {
               year: 'numeric',
             });
 
-            const imageUrl = `http://app.rsabojonegoro.com:1111/api_berita/uploads/${item.fotojudul}`;
+            const imageUrl = `https://api.rsabojonegoro.com/assets/foto/uploads/${item.fotojudul}`;
 
             return (
               <TouchableOpacity

@@ -26,7 +26,7 @@ export default function AntrianObatScreen() {
   const loadAntrian = async () => {
     try {
       const res = await fetch(
-        "http://app.rsabojonegoro.com:5000/his/new/AntrianKORJ",
+        "https://api.rsabojonegoro.com:5010/his/new/AntrianKORJ",
       );
       const json = await res.json();
       setData(json?.[0] || null);

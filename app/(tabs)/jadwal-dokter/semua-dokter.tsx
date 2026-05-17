@@ -28,7 +28,7 @@ export default function SemuaDokter() {
     const loadSpecialist = async () => {
       try {
         const res = await fetch(
-          'http://app.rsabojonegoro.com:5000/his/new/Specialist'
+          'https://api.rsabojonegoro.com:5010/his/new/Specialist'
         );
         const json = await res.json();
         setData(json || []);
@@ -44,7 +44,7 @@ export default function SemuaDokter() {
 
   const getImageSource = (item: Specialist) => {
     return {
-      uri: `http://app.rsabojonegoro.com:1111/foto/clinic/${item.id}.png`,
+      uri: `https://assets/foto/clinic/${item.id}.png`,
     };
   };
 

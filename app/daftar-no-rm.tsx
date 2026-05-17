@@ -67,7 +67,7 @@ export default function PendaftaranRM() {
       const googleId = await SecureStore.getItemAsync("google_id");
 
       const res = await fetch(
-        `http://app.rsabojonegoro.com:5000/his/reg/regpxol/userid?userid=${googleId}`
+        `https://api.rsabojonegoro.com:5010/his/reg/regpxol/userid?userid=${googleId}`
       );
 
       const json = await res.json();
@@ -222,7 +222,7 @@ export default function PendaftaranRM() {
       }
 
       const res = await fetch(
-        "http://app.rsabojonegoro.com:4000/his/reg/regpxol",
+        "https://api.rsabojonegoro.com:5010/his/reg/regpxol",
         {
           method: "POST",
           headers: {
@@ -270,9 +270,9 @@ export default function PendaftaranRM() {
   const loadMasterData = async () => {
     try {
       const [agamaRes, sukuRes, pendidikanRes] = await Promise.all([
-        fetch("http://app.rsabojonegoro.com:4000/his/reg/agamaV2"),
-        fetch("http://app.rsabojonegoro.com:4000/his/reg/sukuV2"),
-        fetch("http://app.rsabojonegoro.com:4000/his/reg/pendidikanV2"),
+        fetch("https://api.rsabojonegoro.com:5010/his/reg/agamaV2"),
+        fetch("https://api.rsabojonegoro.com:5010/his/reg/sukuV2"),
+        fetch("https://api.rsabojonegoro.com:5010/his/reg/pendidikanV2"),
       ]);
 
       setAgamaList(await agamaRes.json());
@@ -297,7 +297,7 @@ export default function PendaftaranRM() {
   const loadKecamatan = async () => {
     try {
       const res = await fetch(
-        "http://app.rsabojonegoro.com:5000/his/reg/camat"
+        "https://api.rsabojonegoro.com:5010/his/reg/camat"
       );
       const json = await res.json();
       setKecamatanList(json?._embedded?.kecamatans || []);
@@ -309,7 +309,7 @@ export default function PendaftaranRM() {
   const loadKelurahan = async (camatId: number) => {
     try {
       const res = await fetch(
-        `http://app.rsabojonegoro.com:5000/his/reg/lurah?camatid=${camatId}`
+        `https://api.rsabojonegoro.com:5010/his/reg/lurah?camatid=${camatId}`
       );
       const json = await res.json();
       setKelurahanList(json?._embedded?.kelurahans || []);

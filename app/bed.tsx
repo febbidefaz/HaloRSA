@@ -21,7 +21,7 @@ export default function BedScreen() {
     const loadData = async () => {
       try {
         const response = await fetch(
-          'http://app.rsabojonegoro.com:5000/his/about/bedready'
+          'https://api.rsabojonegoro.com:5010/his/about/bedready'
         );
         const json = await response.json();
         setData(json?._embedded?.bedReadies || []);

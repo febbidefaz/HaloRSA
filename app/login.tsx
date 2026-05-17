@@ -1,3 +1,4 @@
+import { subscribeHaloRSATopic } from "@/utils/fcmTopic";
 import { makeRedirectUri } from 'expo-auth-session';
 import * as Google from 'expo-auth-session/providers/google';
 import { router } from 'expo-router';
@@ -22,7 +23,7 @@ export default function LoginScreen() {
   const redirectUri = useMemo(() => {
     return makeRedirectUri({
       native:
-      "com.googleusercontent.apps.656827986979-102opc80tg1958j8budbc0t6ca0m6sgf:/",
+        "com.googleusercontent.apps.656827986979-102opc80tg1958j8budbc0t6ca0m6sgf:/oauthredirect",
     });
   }, []);
 
@@ -74,6 +75,7 @@ export default function LoginScreen() {
         await SecureStore.setItemAsync('google_name', profile.name || '');
         await SecureStore.setItemAsync('google_email', profile.email || '');
         await SecureStore.setItemAsync('google_photo', profile.picture || '');
+        await subscribeHaloRSATopic();
 
         router.replace('/home');
       } catch (err: any) {
@@ -133,9 +135,7 @@ export default function LoginScreen() {
           ]}
           disabled={!request || loading}
           onPress={() =>
-            promptAsync({
-              showInRecents: true,
-            })
+            promptAsync()
           }
           activeOpacity={0.85}
         >

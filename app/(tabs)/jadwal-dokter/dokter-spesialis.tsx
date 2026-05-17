@@ -59,7 +59,7 @@ export default function DokterSpesialis() {
         setLoading(true);
 
         const res = await fetch(
-          `http://app.rsabojonegoro.com:5000/his/new/Specialist/sp?sp=${sp}`
+          `https://api.rsabojonegoro.com:5010/his/new/Specialist/sp?sp=${sp}`
         );
 
         const json = await res.json();
@@ -92,7 +92,7 @@ const loadJadwalDokter = async (idDokter: number) => {
     }));
 
     const res = await fetch(
-      `http://app.rsabojonegoro.com:5000/his/about/jadwaldokter/dokter?dr=${idDokter}`
+      `https://api.rsabojonegoro.com:5010/his/about/jadwaldokter/dokter?dr=${idDokter}`
     );
 
     const json = await res.json();
@@ -151,7 +151,7 @@ const loadJadwalDokter = async (idDokter: number) => {
                 
                 <Image
                   source={{
-                    uri: `http://app.rsabojonegoro.com:1111/foto/dr/${item.id}.jpg`,
+                    uri: `https:///assets/foto/dr/${item.id}.jpg`,
                   }}
                   style={styles.avatar}
                 />

@@ -163,7 +163,7 @@ export default function Index() {
   const loadSlide = async () => {
     try {
       const res = await fetch(
-        "http://app.rsabojonegoro.com:5000/his/about/slide",
+        "https://api.rsabojonegoro.com:5010/his/about/slide",
       );
       // console.log('status slide:', res.status);
       const json = await res.json();
@@ -179,7 +179,7 @@ export default function Index() {
   }, []);
 
   const renderItem = ({ item }: any) => {
-    const imageUrl = `http://app.rsabojonegoro.com:1111/api_berita/uploads/${item.fotojudul}`;
+    const imageUrl = `https://api.rsabojonegoro.com/assets/foto/uploads/${item.fotojudul}`;
 
     return (
       <TouchableOpacity

@@ -19,7 +19,7 @@ import {
 import QRCode from "react-native-qrcode-svg";
 import logoRSA from "../assets/images/logorsa.png";
 
-const API_SPECIALIST = "http://app.rsabojonegoro.com:5000/his/new/Specialist";
+const API_SPECIALIST = "https://api.rsabojonegoro.com:5010/his/new/Specialist";
 
 type Klinik = {
   id: number;
@@ -106,7 +106,7 @@ export default function PendaftaranScreen() {
       setListDokter([]);
 
       const response = await fetch(
-        `http://app.rsabojonegoro.com:5000/his/new/Specialist/sp?sp=${sp}`,
+        `https://api.rsabojonegoro.com:5010/his/new/Specialist/sp?sp=${sp}`
       );
 
       const json = await response.json();
@@ -146,52 +146,52 @@ export default function PendaftaranScreen() {
     "Desember",
   ];
 
-const getTanggalDokter = async (drId: number) => {
-  try {
-    const response = await fetch(
-      `http://app.rsabojonegoro.com:5000/his/about/jadwaldokter/dokter?dr=${drId}`
-    );
+  const getTanggalDokter = async (drId: number) => {
+    try {
+      const response = await fetch(
+        `https://api.rsabojonegoro.com:5010/his/about/jadwaldokter/dokter?dr=${drId}`
+      );
 
-    const json = await response.json();
+      const json = await response.json();
 
-    const jadwal = json?._embedded?.jadwalDokters || [];
+      const jadwal = json?._embedded?.jadwalDokters || [];
 
-    const hasil: any[] = [];
+      const hasil: any[] = [];
 
-    const sudahAda = new Set();
+      const sudahAda = new Set();
 
-    for (let i = 0; i < 7; i++) {
-      const date = new Date();
-      date.setDate(date.getDate() + i);
+      for (let i = 0; i < 7; i++) {
+        const date = new Date();
+        date.setDate(date.getDate() + i);
 
-      const day = date.getDay();
+        const day = date.getDay();
 
-      if (day === 0) continue;
+        if (day === 0) continue;
 
-      const adaJadwal = jadwal.some((x: any) => x.hr === day);
+        const adaJadwal = jadwal.some((x: any) => x.hr === day);
 
-      if (!adaJadwal) continue;
+        if (!adaJadwal) continue;
 
-      const key = date.toISOString().split("T")[0];
+        const key = date.toISOString().split("T")[0];
 
-      if (sudahAda.has(key)) continue;
+        if (sudahAda.has(key)) continue;
 
-      sudahAda.add(key);
+        sudahAda.add(key);
 
-      hasil.push({
-        label: `${namaHari[day]}, ${date.getDate()} ${
-          namaBulan[date.getMonth()]
-        } ${date.getFullYear()}`,
-        value: key,
-        hr: day,
-      });
+        hasil.push({
+          label: `${namaHari[day]}, ${date.getDate()} ${
+            namaBulan[date.getMonth()]
+          } ${date.getFullYear()}`,
+          value: key,
+          hr: day,
+        });
+      }
+
+      setListTanggal(hasil);
+    } catch (error) {
+      console.log("Gagal ambil tanggal dokter:", error);
     }
-
-    setListTanggal(hasil);
-  } catch (error) {
-    console.log("Gagal ambil tanggal dokter:", error);
-  }
-};
+  };
 
   const getKodeHari = (dateValue: string) => {
     const date = new Date(dateValue);
@@ -202,17 +202,17 @@ const getTanggalDokter = async (drId: number) => {
   };
 
   const [listTanggal, setListTanggal] = useState<
-  {
+    {
+      label: string;
+      value: string;
+      hr: number;
+    }[]
+  >([]);
+
+  const [selectedTanggal, setSelectedTanggal] = useState<{
     label: string;
     value: string;
-    hr: number;
-  }[]
->([]);
-
-const [selectedTanggal, setSelectedTanggal] = useState<{
-  label: string;
-  value: string;
-} | null>(null);
+  } | null>(null);
 
   const getJadwalPraktek = async (drId: number, tanggal: string) => {
     try {
@@ -222,7 +222,7 @@ const [selectedTanggal, setSelectedTanggal] = useState<{
       const hr = getKodeHari(tanggal);
 
       const response = await fetch(
-        `http://app.rsabojonegoro.com:5000/his/reg/jadwaldokterV2/dh?dr=${drId}&hr=${hr}`,
+        `https://api.rsabojonegoro.com:5010/his/reg/jadwaldokterV2/dh?dr=${drId}&hr=${hr}`
       );
 
       const json = await response.json();
@@ -261,7 +261,7 @@ const [selectedTanggal, setSelectedTanggal] = useState<{
       setLoadingPasien(true);
 
       const response = await fetch(
-        "http://app.rsabojonegoro.com:5000/his/new/CekPxV2",
+        "https://api.rsabojonegoro.com:5010/his/new/CekPxV2",
         {
           method: "POST",
           headers: {
@@ -271,7 +271,7 @@ const [selectedTanggal, setSelectedTanggal] = useState<{
             patientid: noRM,
             date: convertTanggalApi(tglLahir),
           }),
-        },
+        }
       );
 
       const json = await response.json();
@@ -280,14 +280,14 @@ const [selectedTanggal, setSelectedTanggal] = useState<{
         const pasien = json.response;
 
         setSelectedPasien(pasien);
-        
+
         setNoRM("");
         setTglLahir("");
         setModalPasienVisible(false);
       } else {
         setErrorMessage(
           json?.metadata?.message ||
-            "Nomor rekam medis atau tanggal lahir ada yang salah",
+            "Nomor rekam medis atau tanggal lahir ada yang salah"
         );
         setModalErrorVisible(true);
       }
@@ -308,10 +308,10 @@ const [selectedTanggal, setSelectedTanggal] = useState<{
     if (cleaned.length <= 4)
       return `${cleaned.slice(0, 2)}.${cleaned.slice(2)}`;
 
-    return `${cleaned.slice(0, 2)}.${cleaned.slice(
-      2,
+    return `${cleaned.slice(0, 2)}.${cleaned.slice(2, 4)}.${cleaned.slice(
       4,
-    )}.${cleaned.slice(4, 6)}`;
+      6
+    )}`;
   };
 
   const formatTanggal = (text: string) => {
@@ -322,10 +322,10 @@ const [selectedTanggal, setSelectedTanggal] = useState<{
     if (cleaned.length <= 4)
       return `${cleaned.slice(0, 2)}-${cleaned.slice(2)}`;
 
-    return `${cleaned.slice(0, 2)}-${cleaned.slice(
-      2,
+    return `${cleaned.slice(0, 2)}-${cleaned.slice(2, 4)}-${cleaned.slice(
       4,
-    )}-${cleaned.slice(4, 8)}`;
+      8
+    )}`;
   };
 
   const convertTanggalApi = (tanggal: string) => {
@@ -367,14 +367,14 @@ const [selectedTanggal, setSelectedTanggal] = useState<{
       };
 
       const response = await fetch(
-        "http://app.rsabojonegoro.com:5000/his/about/newregV2",
+        "https://api.rsabojonegoro.com:5010/his/about/newregV2",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(payload),
-        },
+        }
       );
 
       const json = await response.json();
@@ -383,18 +383,21 @@ const [selectedTanggal, setSelectedTanggal] = useState<{
         const regId = json?.response?.id;
 
         const reportResponse = await fetch(
-          `http://app.rsabojonegoro.com:5000/his/about/newreg/regid?id=${regId}`,
+          `https://api.rsabojonegoro.com:5010/his/about/newreg/regid?id=${regId}`
         );
 
         const reportJson = await reportResponse.json();
 
-        setBuktiDaftar(reportJson);
-        await simpanPasienKeHp(selectedPasien);
-        setModalSuksesVisible(true);
+        const bukti = reportJson?.response || reportJson;
+               
+        setBuktiDaftar(bukti);
         
+        await simpanPasienKeHp(selectedPasien);
+        
+        setModalSuksesVisible(true);
       } else {
         setErrorMessage(
-          json?.metadata?.message || json?.message || "Pendaftaran gagal",
+          json?.metadata?.message || json?.message || "Pendaftaran gagal"
         );
         setModalErrorVisible(true);
       }
@@ -417,7 +420,7 @@ const [selectedTanggal, setSelectedTanggal] = useState<{
 
   useEffect(() => {
     if (params.ulang !== "1") return;
-  
+
     const loadDaftarUlang = async () => {
       try {
         if (params.patientid && params.patientname) {
@@ -429,7 +432,7 @@ const [selectedTanggal, setSelectedTanggal] = useState<{
             upx: Number(params.upx || 0),
           });
         }
-  
+
         if (params.klinik) {
           setSelectedKlinik({
             id: Number(params.clinicId || 0),
@@ -440,7 +443,7 @@ const [selectedTanggal, setSelectedTanggal] = useState<{
             kdBPJS: null,
           });
         }
-  
+
         if (params.dokter) {
           const dokterSelected = {
             id: Number(params.dokterid || 0),
@@ -448,12 +451,12 @@ const [selectedTanggal, setSelectedTanggal] = useState<{
             spesialis: String(params.klinik || ""),
             sp: Number(params.clinicId || 0),
           };
-  
+
           setSelectedDokter(dokterSelected);
-  
+
           await getTanggalDokter(dokterSelected.id);
         }
-  
+
         if (params.bukaTanggal === "1") {
           setTimeout(() => {
             setModalTanggalVisible(true);
@@ -463,9 +466,9 @@ const [selectedTanggal, setSelectedTanggal] = useState<{
         console.log("loadDaftarUlang error:", err);
       }
     };
-  
+
     loadDaftarUlang();
-  
+
     return () => {};
   }, [
     params.ulang,
@@ -560,23 +563,18 @@ const [selectedTanggal, setSelectedTanggal] = useState<{
             onPress={() => setModalPasienVisible(true)}
           />
 
-<TouchableOpacity
-  style={[
-    styles.button,
-    loadingDaftar && { opacity: 0.7 }
-  ]}
-  activeOpacity={0.85}
-  onPress={daftarPasien}
-  disabled={loadingDaftar}
->
-  {loadingDaftar ? (
-    <ActivityIndicator color="#fff" />
-  ) : (
-    <Text style={styles.buttonText}>
-      Daftar Sekarang
-    </Text>
-  )}
-</TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, loadingDaftar && { opacity: 0.7 }]}
+            activeOpacity={0.85}
+            onPress={daftarPasien}
+            disabled={loadingDaftar}
+          >
+            {loadingDaftar ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Daftar Sekarang</Text>
+            )}
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -695,9 +693,9 @@ const [selectedTanggal, setSelectedTanggal] = useState<{
                       setSelectedDokter(item);
 
                       setModalDokterVisible(false);
-                      
+
                       await getTanggalDokter(item.id);
-                      
+
                       setTimeout(() => {
                         setModalTanggalVisible(true);
                       }, 300);
@@ -705,7 +703,7 @@ const [selectedTanggal, setSelectedTanggal] = useState<{
                   >
                     <Image
                       source={{
-                        uri: `http://app.rsabojonegoro.com:1111/foto/dr/${item.id}.jpg`,
+                        uri: `https://api.rsabojonegoro.com/assets/foto/dr/${item.id}.jpg`,
                       }}
                       style={styles.dokterImage}
                       resizeMode="cover"
@@ -747,7 +745,7 @@ const [selectedTanggal, setSelectedTanggal] = useState<{
             <Text style={styles.modalTitle}>Pilih Tanggal</Text>
 
             <FlatList
-             data={listTanggal}
+              data={listTanggal}
               keyExtractor={(item) => item.value}
               renderItem={({ item }) => (
                 <TouchableOpacity
@@ -812,10 +810,10 @@ const [selectedTanggal, setSelectedTanggal] = useState<{
                     item.status === 1
                       ? "Libur"
                       : item.status === 2
-                        ? "Penuh"
-                        : item.status === 3
-                          ? "Tutup"
-                          : "Masuk";
+                      ? "Penuh"
+                      : item.status === 3
+                      ? "Tutup"
+                      : "Masuk";
 
                   return (
                     <TouchableOpacity
@@ -868,8 +866,8 @@ const [selectedTanggal, setSelectedTanggal] = useState<{
                               item.status === 1
                                 ? styles.badgeLibur
                                 : item.status === 2
-                                  ? styles.badgePenuh
-                                  : styles.badgeTutup
+                                ? styles.badgePenuh
+                                : styles.badgeTutup
                             }
                           >
                             <Text style={styles.badgeText}>{statusText}</Text>
@@ -989,15 +987,14 @@ const [selectedTanggal, setSelectedTanggal] = useState<{
       <Modal visible={modalSuksesVisible} transparent animationType="fade">
         <TouchableOpacity
           style={styles.modalOverlay}
-          activeOpacity={1}         
+          activeOpacity={1}
           onPress={() => {
             setModalSuksesVisible(false);
-          
+
             setTimeout(() => {
               router.push("/riwayat-pendaftaran");
             }, 300);
-          }}     
-          
+          }}
         >
           <TouchableOpacity
             activeOpacity={1}
@@ -1034,6 +1031,10 @@ const [selectedTanggal, setSelectedTanggal] = useState<{
             <InfoRow
               label="No Antrean"
               value={String(buktiDaftar?.pxno || "-")}
+            />
+            <InfoRow
+              label="Estimasi Dilayani"
+              value={buktiDaftar?.estimasi?.slice(0, 5) || "-"}
             />
             <InfoRow label="No RM" value={selectedPasien?.patientid || "-"} />
             <InfoRow label="Dokter" value={selectedDokter?.dokter || "-"} />

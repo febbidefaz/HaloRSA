@@ -35,6 +35,7 @@ type RiwayatReg = {
   patientname?: string;
   jawal?: string;
   jakhir?: string;
+  estimasi?: string;
   idol?: number;
 };
 
@@ -65,7 +66,7 @@ export default function RiwayatPendaftaran() {
       const googleId = await SecureStore.getItemAsync("google_id");
 
       const res = await fetch(
-        `http://app.rsabojonegoro.com:5000/his/reg/riwayatreg/userid?userid=${googleId}`,
+        `https://api.rsabojonegoro.com:5010/his/reg/riwayatreg/userid?userid=${googleId}`
       );
 
       const json = await res.json();
@@ -98,10 +99,10 @@ export default function RiwayatPendaftaran() {
         onPress: async () => {
           try {
             const res = await fetch(
-              `http://app.rsabojonegoro.com:5000/his/about/deleteReg?regid=${selectedItem.idol}`,
+              `https://api.rsabojonegoro.com:5010/his/about/deleteReg?regid=${selectedItem.idol}`,
               {
                 method: "DELETE",
-              },
+              }
             );
 
             console.log("DELETE IDOL:", selectedItem.idol);
@@ -137,14 +138,14 @@ export default function RiwayatPendaftaran() {
       };
 
       const res = await fetch(
-        "http://app.rsabojonegoro.com:5000/his/reg/newRating",
+        "https://api.rsabojonegoro.com:5010/his/reg/newRating",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(body),
-        },
+        }
       );
 
       console.log("RATING RESPONSE:", await res.text());
@@ -270,10 +271,10 @@ export default function RiwayatPendaftaran() {
                             layanan: item.layanan || "",
                             dokter: item.doctorname || "",
                             dokterid: String(
-                              item.dokterid || item.iddokter || "",
+                              item.dokterid || item.iddokter || ""
                             ),
                             clinicId: String(
-                              item.sublayananId || item.idspesialis || "",
+                              item.sublayananId || item.idspesialis || ""
                             ),
                           },
                         });
@@ -345,6 +346,13 @@ export default function RiwayatPendaftaran() {
               </View>
 
               <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Estimasi dilayani</Text>
+                <Text style={styles.detailValue}>
+                  {selectedItem.estimasi?.slice(0, 5) || "-"}
+                </Text>
+              </View>
+
+              <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>No RM</Text>
                 <Text style={styles.detailValue}>{selectedItem.patientid}</Text>
               </View>
@@ -373,7 +381,7 @@ export default function RiwayatPendaftaran() {
                     year: "numeric",
                   })}
                 </Text>
-              </View>
+              </View>              
 
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Jam praktek</Text>
@@ -382,6 +390,8 @@ export default function RiwayatPendaftaran() {
                   {selectedItem.jakhir?.slice(0, 5)}
                 </Text>
               </View>
+
+          
             </>
           )}
         </View>
@@ -419,12 +429,12 @@ export default function RiwayatPendaftaran() {
             {ratingValue === 5
               ? "Sangat baik"
               : ratingValue === 4
-                ? "Baik"
-                : ratingValue === 3
-                  ? "Cukup"
-                  : ratingValue === 2
-                    ? "Kurang"
-                    : "Buruk"}
+              ? "Baik"
+              : ratingValue === 3
+              ? "Cukup"
+              : ratingValue === 2
+              ? "Kurang"
+              : "Buruk"}
           </Text>
 
           {/* INPUT */}

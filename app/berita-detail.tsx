@@ -37,7 +37,7 @@ export default function BeritaDetail() {
       setLoading(true);
 
       const res = await fetch(
-        `http://app.rsabojonegoro.com:5000/his/about/berita/${id}`
+        `https://api.rsabojonegoro.com:5010/his/about/berita/${id}`
       );
 
       const json = await res.json();
@@ -55,7 +55,8 @@ export default function BeritaDetail() {
   }, [id]);
 
   const imageUrl = data
-    ? `http://app.rsabojonegoro.com:1111/api_berita/uploads/${data.fotojudul}`
+   // ? `http://app.rsabojonegoro.com:1111/api_berita/uploads/${data.fotojudul}`
+    ? `https://api.rsabojonegoro.com/assets/foto/uploads/${data.fotojudul}`
     : '';
 
   const tanggal = data?.tanggal

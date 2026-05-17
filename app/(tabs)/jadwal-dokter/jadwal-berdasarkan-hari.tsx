@@ -47,7 +47,7 @@ export default function JadwalBerdasarkanHari() {
       setErrorMsg('');
 
       const response = await fetch(
-        `http://app.rsabojonegoro.com:5000/his/about/jadwaldokter/hari?hr=${hr}`
+        `https://api.rsabojonegoro.com:5010/his/about/jadwaldokter/hari?hr=${hr}`
       );
 
       const json = await response.json();
@@ -66,7 +66,7 @@ export default function JadwalBerdasarkanHari() {
     const loadSpesialis = async () => {
       try {
        // const res = await fetch('https://android.rsabojonegoro.com/his/new/Specialist');
-        const res = await fetch('http://app.rsabojonegoro.com:5000/his/new/Specialist');
+        const res = await fetch('https://api.rsabojonegoro.com:5010/his/new/Specialist');
         const json = await res.json();
         setSpesialisList(json || []);
       } catch (err) {
@@ -91,7 +91,7 @@ export default function JadwalBerdasarkanHari() {
   
     if (!found) return null;
   
-    return `http://app.rsabojonegoro.com:1111/foto/clinic/${found.id}.png`;
+    return `https://assets/foto/clinic/${found.id}.png`;
   };
 
   return (
