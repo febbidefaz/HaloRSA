@@ -1,22 +1,22 @@
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import React, { useEffect, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
-} from 'react-native';
+  View,
+} from "react-native";
 
 const hariList = [
-  { label: 'Senin', value: 1 },
-  { label: 'Selasa', value: 2 },
-  { label: 'Rabu', value: 3 },
-  { label: 'Kamis', value: 4 },
-  { label: 'Jumat', value: 5 },
-  { label: 'Sabtu', value: 6 },
-  { label: 'Minggu', value: 7 },
+  { label: "Senin", value: 1 },
+  { label: "Selasa", value: 2 },
+  { label: "Rabu", value: 3 },
+  { label: "Kamis", value: 4 },
+  { label: "Jumat", value: 5 },
+  { label: "Sabtu", value: 6 },
+  { label: "Minggu", value: 7 },
 ];
 
 type JadwalDokter = {
@@ -31,31 +31,31 @@ type JadwalDokter = {
 };
 
 export default function JadwalBerdasarkanHari() {
-  const [selectedHari, setSelectedHari] = useState('Senin');
+  const [selectedHari, setSelectedHari] = useState("Senin");
   const [selectedHr, setSelectedHr] = useState(1);
   const [data, setData] = useState<JadwalDokter[]>([]);
   const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState("");
   const [spesialisList, setSpesialisList] = useState<any[]>([]);
   const getIconBySpesialis = (spesialis: string) => {
-    return 'https://cdn-icons-png.flaticon.com/512/387/387569.png';
+    return "https://cdn-icons-png.flaticon.com/512/387/387569.png";
   };
 
   const loadJadwal = async (hr: number) => {
     try {
       setLoading(true);
-      setErrorMsg('');
+      setErrorMsg("");
 
       const response = await fetch(
-        `https://api.rsabojonegoro.com:5010/his/about/jadwaldokter/hari?hr=${hr}`
+        `https://api.rsabojonegoro.com:5010/his/about/jadwaldokter/hari?hr=${hr}`,
       );
 
       const json = await response.json();
       const items = json?._embedded?.jadwalDokters || [];
       setData(items);
     } catch (err: any) {
-      console.log('FETCH ERROR:', err);
-      setErrorMsg(err?.message || 'Gagal mengambil data jadwal dokter');
+      console.log("FETCH ERROR:", err);
+      setErrorMsg(err?.message || "Gagal mengambil data jadwal dokter");
       setData([]);
     } finally {
       setLoading(false);
@@ -65,15 +65,17 @@ export default function JadwalBerdasarkanHari() {
   useEffect(() => {
     const loadSpesialis = async () => {
       try {
-       // const res = await fetch('https://android.rsabojonegoro.com/his/new/Specialist');
-        const res = await fetch('https://api.rsabojonegoro.com:5010/his/new/Specialist');
+        // const res = await fetch('https://android.rsabojonegoro.com/his/new/Specialist');
+        const res = await fetch(
+          "https://api.rsabojonegoro.com:5010/his/new/Specialist",
+        );
         const json = await res.json();
         setSpesialisList(json || []);
       } catch (err) {
-        console.log('ERROR SPECIALIST:', err);
+        console.log("ERROR SPECIALIST:", err);
       }
     };
-  
+
     loadSpesialis();
   }, []);
 
@@ -83,15 +85,16 @@ export default function JadwalBerdasarkanHari() {
 
   const getImageSpesialis = (spesialis: string) => {
     if (!spesialisList.length) return null;
-  
-    const found = spesialisList.find((s) =>
-      spesialis.toLowerCase().includes(s.name.toLowerCase()) ||
-      s.name.toLowerCase().includes(spesialis.toLowerCase())
+
+    const found = spesialisList.find(
+      (s) =>
+        spesialis.toLowerCase().includes(s.name.toLowerCase()) ||
+        s.name.toLowerCase().includes(spesialis.toLowerCase()),
     );
-  
+
     if (!found) return null;
-  
-    return `https://assets/foto/clinic/${found.id}.png`;
+
+    return `https://api.rsabojonegoro.com/assets/foto/clinic/${found.id}.png`;
   };
 
   return (
@@ -104,10 +107,10 @@ export default function JadwalBerdasarkanHari() {
         >
           <Ionicons name="chevron-back" size={30} color="#fff" />
         </TouchableOpacity>
-  
+
         <Text style={styles.headerTitle}>Jadwal Dokter</Text>
       </View>
-  
+
       <ScrollView style={styles.content}>
         {hariList.map((hari) => (
           <View key={hari.value}>
@@ -118,7 +121,7 @@ export default function JadwalBerdasarkanHari() {
               ]}
               onPress={() => {
                 router.push({
-                  pathname: 'jadwal-dokter/jadwal-per-hari',
+                  pathname: "jadwal-dokter/jadwal-per-hari",
                   params: {
                     hr: hari.value,
                     hari: hari.label,
@@ -139,7 +142,7 @@ export default function JadwalBerdasarkanHari() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F4F7F7',
+    backgroundColor: "#F4F7F7",
   },
 
   header: {
@@ -154,14 +157,14 @@ const styles = StyleSheet.create({
   },
 
   headerTitle: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 19,
-    fontWeight: '700',
+    fontWeight: "700",
     letterSpacing: 0.2,
   },
 
   backButton: {
-    position: 'absolute',
+    position: "absolute",
     left: 14,
     top: 36,
     zIndex: 10,
@@ -172,49 +175,49 @@ const styles = StyleSheet.create({
   },
 
   menuCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 14,
     paddingVertical: 15,
     paddingHorizontal: 14,
     marginBottom: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderLeftWidth: 4,
-    borderLeftColor: '#0A7C86',
+    borderLeftColor: "#0A7C86",
     elevation: 2,
   },
 
   cardActive: {
-    backgroundColor: '#E7F5F6',
+    backgroundColor: "#E7F5F6",
   },
 
   cardText: {
     fontSize: 16,
-    color: '#333',
+    color: "#333",
     marginLeft: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 
   errorBox: {
-    backgroundColor: '#FFE5E5',
+    backgroundColor: "#FFE5E5",
     padding: 12,
     borderRadius: 12,
     marginTop: 10,
   },
 
   errorText: {
-    color: '#D32F2F',
-    fontWeight: '600',
+    color: "#D32F2F",
+    fontWeight: "600",
   },
 
   emptyBox: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     padding: 14,
     borderRadius: 12,
   },
 
   emptyText: {
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
   },
 });

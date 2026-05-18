@@ -1,6 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -10,7 +10,7 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from 'react-native';
+} from "react-native";
 
 type Specialist = {
   id: number;
@@ -28,12 +28,12 @@ export default function SemuaDokter() {
     const loadSpecialist = async () => {
       try {
         const res = await fetch(
-          'https://api.rsabojonegoro.com:5010/his/new/Specialist'
+          "https://api.rsabojonegoro.com:5010/his/new/Specialist",
         );
         const json = await res.json();
         setData(json || []);
       } catch (err) {
-        console.log('ERROR SPECIALIST:', err);
+        console.log("ERROR SPECIALIST:", err);
       } finally {
         setLoading(false);
       }
@@ -44,7 +44,7 @@ export default function SemuaDokter() {
 
   const getImageSource = (item: Specialist) => {
     return {
-      uri: `https://assets/foto/clinic/${item.id}.png`,
+      uri: `https://api.rsabojonegoro.com/assets/foto/clinic/${item.id}.png`,
     };
   };
 
@@ -52,15 +52,15 @@ export default function SemuaDokter() {
     <View style={styles.container}>
       <StatusBar backgroundColor="#0A7C86" barStyle="light-content" />
       <View style={styles.header}>
-      <TouchableOpacity
-        onPress={() => router.back()}
-        style={styles.backButton}
-      >
-        <Ionicons name="chevron-back" size={30} color="#fff" />
-      </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
+          <Ionicons name="chevron-back" size={30} color="#fff" />
+        </TouchableOpacity>
 
-      <Text style={styles.headerTitle}>Jadwal Dokter Spesialis</Text>
-    </View>
+        <Text style={styles.headerTitle}>Jadwal Dokter Spesialis</Text>
+      </View>
 
       {loading ? (
         <View style={styles.loadingBox}>
@@ -73,27 +73,29 @@ export default function SemuaDokter() {
 
             return (
               <TouchableOpacity
-                  key={item.id}
-                  activeOpacity={0.75}
-                  style={styles.card}
-                  onPress={() => {
-                    router.push({
-                      pathname: '/jadwal-dokter/dokter-spesialis',
-                      params: {
-                        sp: item.id,
-                        nama: item.name,
-                      },
-                    });
-                  }}
-                >
+                key={item.id}
+                activeOpacity={0.75}
+                style={styles.card}
+                onPress={() => {
+                  router.push({
+                    pathname: "/jadwal-dokter/dokter-spesialis",
+                    params: {
+                      sp: item.id,
+                      nama: item.name,
+                    },
+                  });
+                }}
+              >
                 <View style={styles.iconCircle}>
                   {img ? (
                     <Image
-                    source={img}
-                    style={styles.iconImage}
-                    resizeMode="cover"
-                    onError={() => console.log('Foto spesialis tidak ditemukan:', item.id)}
-                  />
+                      source={img}
+                      style={styles.iconImage}
+                      resizeMode="cover"
+                      onError={() =>
+                        console.log("Foto spesialis tidak ditemukan:", item.id)
+                      }
+                    />
                   ) : (
                     <Ionicons name="medkit-outline" size={22} color="#BDBDBD" />
                   )}
@@ -114,7 +116,7 @@ export default function SemuaDokter() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#EFEFEF',
+    backgroundColor: "#EFEFEF",
   },
 
   header: {
@@ -127,20 +129,20 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 24,
     elevation: 6,
   },
-  
+
   backButton: {
-    position: 'absolute',
+    position: "absolute",
     left: 14,
     top: 36,
     zIndex: 10,
   },
-  
+
   headerTitle: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
     letterSpacing: 0.3,
-    textAlign: 'center',
+    textAlign: "center",
     paddingHorizontal: 42,
   },
 
@@ -150,13 +152,13 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     marginHorizontal: 12,
     marginBottom: 8,
     minHeight: 64,
     borderRadius: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 14,
   },
 
@@ -164,10 +166,10 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: '#E9E9E9',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
+    backgroundColor: "#E9E9E9",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
   },
 
   iconImage: {
@@ -179,14 +181,14 @@ const styles = StyleSheet.create({
   name: {
     marginLeft: 16,
     fontSize: 17,
-    color: '#555',
+    color: "#555",
     flex: 1,
-    fontWeight: '400',
+    fontWeight: "400",
   },
 
   loadingBox: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
