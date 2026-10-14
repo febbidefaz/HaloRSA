@@ -42,9 +42,9 @@ const menuItems = [
     // icon: <MaterialCommunityIcons name="clipboard-list-outline" size={28} color="#fff" />,
   },
   {
-    title: "Konsultasi\nDokter",
+    title: "Hubungi\nAdmin",
     bgColor: "#5DA9FF",
-    image: require("../assets/menu/konsul.png"),
+    image: require("../assets/menu/admin.png"),
     route: "/konsultasi",
     // icon: <FontAwesome5 name="user-md" size={26} color="#fff" />,
   },
@@ -138,9 +138,8 @@ export default function Index() {
 
       console.log("MULAI REGISTER NOTIF");
 
-      const pushToken =
-        await registerForPushNotificationsAsync();
-      
+      const pushToken = await registerForPushNotificationsAsync();
+
       console.log("TOKEN HASIL:", pushToken);
 
       console.log("EXPO TOKEN:", pushToken);

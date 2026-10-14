@@ -24,7 +24,7 @@ export default function KonsultasiScreen() {
 
   const loadWA = async () => {
     try {
-      const res = await fetch(      
+      const res = await fetch(
         "https://api.rsabojonegoro.com:5010/his/new/NoWAAndroid",
       );
       const json = await res.json();
@@ -45,7 +45,7 @@ export default function KonsultasiScreen() {
     if (!data?.nowa) return;
 
     const message = encodeURIComponent(
-      "Assalamu’alaikum wr. wb, saya ingin konsultasi dokter di RS Aisyiyah Bojonegoro",
+      "Assalamu’alaikum wr. wb. \nSaya ingin menghubungi Admin RS ‘Aisyiyah Bojonegoro untuk mendapatkan informasi dan bantuan terkait pelayanan rumah sakit. \nTerima kasih.",
     );
 
     const url = `https://wa.me/${data.nowa}?text=${message}`;
@@ -66,24 +66,23 @@ export default function KonsultasiScreen() {
       <StatusBar backgroundColor="#0A7C86" barStyle="light-content" />
       {/* HEADER */}
       <View style={styles.header}>
-  <TouchableOpacity
-    onPress={() => router.back()}
-    style={styles.backButton}
-  >
-   <Ionicons name="chevron-back" size={30} color="#fff" />
-  </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
+          <Ionicons name="chevron-back" size={30} color="#fff" />
+        </TouchableOpacity>
 
-  <View style={styles.headerCenter}>
-    <Text style={styles.title}>Konsultasi Dokter</Text>
-
- 
-  </View>
-</View>
+        <View style={styles.headerCenter}>
+          <Text style={styles.title}>Hubungi Admin</Text>
+        </View>
+      </View>
 
       {/* CONTENT */}
       <View style={styles.content}>
         <Text style={styles.desc}>
-          Konsultasi langsung dengan RSA Bojonegoro melalui WhatsApp
+          Butuh informasi atau bantuan? Hubungi Admin RS ‘Aisyiyah Bojonegoro
+          langsung melalui WhatsApp.
         </Text>
 
         <TouchableOpacity style={styles.button} onPress={openWA}>
@@ -104,13 +103,13 @@ const styles = StyleSheet.create({
     paddingTop: 38,
     paddingBottom: 12,
     paddingHorizontal: 16,
-  
+
     flexDirection: "row",
     alignItems: "center",
-  
+
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
-  
+
     elevation: 6,
   },
 
@@ -120,7 +119,7 @@ const styles = StyleSheet.create({
     top: 35,
     zIndex: 10,
   },
-  
+
   headerCenter: {
     flex: 1,
     alignItems: "center",

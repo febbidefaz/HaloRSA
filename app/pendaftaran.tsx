@@ -1,8 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import { router, useLocalSearchParams } from "expo-router";
+
 import * as SecureStore from "expo-secure-store";
+
 import React, { useEffect, useState } from "react";
+
 import {
   ActivityIndicator,
   FlatList,
@@ -16,82 +21,151 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
 import QRCode from "react-native-qrcode-svg";
+
 import logoRSA from "../assets/images/logorsa.png";
 
 const API_SPECIALIST = "https://api.rsabojonegoro.com:5010/his/new/Specialist";
 
 type Klinik = {
   id: number;
+
   name: string;
+
   category: string;
+
   fotoOL: string | null;
+
   layID: number;
+
   kdBPJS: string | null;
 };
 
 type Dokter = {
   id: number;
+
   dokter: string;
+
   spesialis: string;
+
   sp: number;
 };
 
 type JadwalPraktek = {
   id: number;
+
   dr: number;
+
   hr: number;
+
   prak: number;
+
   jml: number;
+
   ready: number;
+
   shift: string;
+
   status: number;
+
   ketstatus: string;
+
   date: string;
 };
 
 type Pasien = {
   id: string;
+
   patientid: string;
+
   date: string;
+
   name: string;
+
   upx: number;
+};
+
+type Penjamin = {
+  id: number;
+
+  pxrs: string;
 };
 
 export default function PendaftaranScreen() {
   const [modalVisible, setModalVisible] = useState(false);
+
   const [selectedKlinik, setSelectedKlinik] = useState<Klinik | null>(null);
+
   const [listKlinik, setListKlinik] = useState<Klinik[]>([]);
+
   const [loadingKlinik, setLoadingKlinik] = useState(false);
+
   const [modalDokterVisible, setModalDokterVisible] = useState(false);
+
   const [listDokter, setListDokter] = useState<Dokter[]>([]);
+
   const [selectedDokter, setSelectedDokter] = useState<Dokter | null>(null);
+
   const [loadingDokter, setLoadingDokter] = useState(false);
+
   const [modalTanggalVisible, setModalTanggalVisible] = useState(false);
+
   const [modalJamVisible, setModalJamVisible] = useState(false);
+
   const [listJamPraktek, setListJamPraktek] = useState<JadwalPraktek[]>([]);
+
   const [selectedJamPraktek, setSelectedJamPraktek] =
     useState<JadwalPraktek | null>(null);
+
   const [loadingJam, setLoadingJam] = useState(false);
+
   const [modalPasienVisible, setModalPasienVisible] = useState(false);
+
   const [noRM, setNoRM] = useState("");
+
   const [tglLahir, setTglLahir] = useState("");
+
   const [loadingPasien, setLoadingPasien] = useState(false);
+
   const [selectedPasien, setSelectedPasien] = useState<Pasien | null>(null);
+
   const [riwayatPasien, setRiwayatPasien] = useState<Pasien[]>([]);
+
   const [modalErrorVisible, setModalErrorVisible] = useState(false);
+
   const [errorMessage, setErrorMessage] = useState("");
+
   const [googleId, setGoogleId] = useState("");
+
   const [modalSuksesVisible, setModalSuksesVisible] = useState(false);
+
   const [buktiDaftar, setBuktiDaftar] = useState<any>(null);
+
   const params = useLocalSearchParams();
+
   const [loadingDaftar, setLoadingDaftar] = useState(false);
+
+  const [listPenjamin, setListPenjamin] = useState<Penjamin[]>([]);
+
+  const [selectedPenjamin, setSelectedPenjamin] = useState<Penjamin>({
+    id: 1,
+
+    pxrs: "Umum",
+  });
+
+  const [modalPenjaminVisible, setModalPenjaminVisible] = useState(false);
+
+  const [loadingPenjamin, setLoadingPenjamin] = useState(false);
 
   const getSpecialist = async () => {
     try {
       setLoadingKlinik(true);
+
       const response = await fetch(API_SPECIALIST);
+
       const data = await response.json();
+
       setListKlinik(Array.isArray(data) ? data : []);
     } catch (error) {
       console.log("Gagal ambil specialist:", error);
@@ -103,10 +177,11 @@ export default function PendaftaranScreen() {
   const getDokterBySpesialis = async (sp: number) => {
     try {
       setLoadingDokter(true);
+
       setListDokter([]);
 
       const response = await fetch(
-        `https://api.rsabojonegoro.com:5010/his/new/Specialist/sp?sp=${sp}`
+        `https://api.rsabojonegoro.com:5010/his/new/Specialist/sp?sp=${sp}`,
       );
 
       const json = await response.json();
@@ -123,33 +198,50 @@ export default function PendaftaranScreen() {
 
   const namaHari = [
     "Minggu",
+
     "Senin",
+
     "Selasa",
+
     "Rabu",
+
     "Kamis",
+
     "Jum'at",
+
     "Sabtu",
   ];
 
   const namaBulan = [
     "Januari",
+
     "Februari",
+
     "Maret",
+
     "April",
+
     "Mei",
+
     "Juni",
+
     "Juli",
+
     "Agustus",
+
     "September",
+
     "Oktober",
+
     "November",
+
     "Desember",
   ];
 
   const getTanggalDokter = async (drId: number) => {
     try {
       const response = await fetch(
-        `https://api.rsabojonegoro.com:5010/his/about/jadwaldokter/dokter?dr=${drId}`
+        `https://api.rsabojonegoro.com:5010/his/about/jadwaldokter/dokter?dr=${drId}`,
       );
 
       const json = await response.json();
@@ -162,17 +254,28 @@ export default function PendaftaranScreen() {
 
       for (let i = 0; i < 7; i++) {
         const date = new Date();
+
         date.setDate(date.getDate() + i);
 
         const day = date.getDay();
 
-        if (day === 0) continue;
+        // Konversi kode hari JavaScript ke kode hari API
 
-        const adaJadwal = jadwal.some((x: any) => x.hr === day);
+        // Minggu: JS = 0, API = 7
+
+        const kodeHariAPI = day === 0 ? 7 : day;
+
+        const adaJadwal = jadwal.some((x: any) => Number(x.hr) === kodeHariAPI);
 
         if (!adaJadwal) continue;
 
-        const key = date.toISOString().split("T")[0];
+        const key = [
+          date.getFullYear(),
+
+          String(date.getMonth() + 1).padStart(2, "0"),
+
+          String(date.getDate()).padStart(2, "0"),
+        ].join("-");
 
         if (sudahAda.has(key)) continue;
 
@@ -182,7 +285,9 @@ export default function PendaftaranScreen() {
           label: `${namaHari[day]}, ${date.getDate()} ${
             namaBulan[date.getMonth()]
           } ${date.getFullYear()}`,
+
           value: key,
+
           hr: day,
         });
       }
@@ -194,35 +299,45 @@ export default function PendaftaranScreen() {
   };
 
   const getKodeHari = (dateValue: string) => {
-    const date = new Date(dateValue);
+    const [tahun, bulan, tanggal] = dateValue.split("-").map(Number);
+
+    const date = new Date(tahun, bulan - 1, tanggal);
+
     const day = date.getDay();
 
-    // Minggu = 0, Senin = 1, Selasa = 2, dst
-    return day;
+    // Konversi hari JavaScript ke format API
+
+    // Senin = 1, Selasa = 2, ... Sabtu = 6, Minggu = 7
+
+    return day === 0 ? 7 : day;
   };
 
   const [listTanggal, setListTanggal] = useState<
     {
       label: string;
+
       value: string;
+
       hr: number;
     }[]
   >([]);
 
   const [selectedTanggal, setSelectedTanggal] = useState<{
     label: string;
+
     value: string;
   } | null>(null);
 
   const getJadwalPraktek = async (drId: number, tanggal: string) => {
     try {
       setLoadingJam(true);
+
       setListJamPraktek([]);
 
       const hr = getKodeHari(tanggal);
 
       const response = await fetch(
-        `https://api.rsabojonegoro.com:5010/his/reg/jadwaldokterV2/dh?dr=${drId}&hr=${hr}`
+        `https://api.rsabojonegoro.com:5010/his/reg/jadwaldokterV2/dh?dr=${drId}&hr=${hr}`,
       );
 
       const json = await response.json();
@@ -239,6 +354,7 @@ export default function PendaftaranScreen() {
 
   const loadRiwayatPasien = async () => {
     const saved = await AsyncStorage.getItem("RIWAYAT_PASIEN");
+
     if (saved) {
       setRiwayatPasien(JSON.parse(saved));
     }
@@ -246,6 +362,7 @@ export default function PendaftaranScreen() {
 
   const simpanPasienKeHp = async (pasien: Pasien) => {
     const saved = await AsyncStorage.getItem("RIWAYAT_PASIEN");
+
     const lama: Pasien[] = saved ? JSON.parse(saved) : [];
 
     const sudahAda = lama.some((x) => x.patientid === pasien.patientid);
@@ -253,6 +370,7 @@ export default function PendaftaranScreen() {
     const dataBaru = sudahAda ? lama : [pasien, ...lama];
 
     await AsyncStorage.setItem("RIWAYAT_PASIEN", JSON.stringify(dataBaru));
+
     setRiwayatPasien(dataBaru);
   };
 
@@ -262,16 +380,20 @@ export default function PendaftaranScreen() {
 
       const response = await fetch(
         "https://api.rsabojonegoro.com:5010/his/new/CekPxV2",
+
         {
           method: "POST",
+
           headers: {
             "Content-Type": "application/json",
           },
+
           body: JSON.stringify({
             patientid: noRM,
+
             date: convertTanggalApi(tglLahir),
           }),
-        }
+        },
       );
 
       const json = await response.json();
@@ -282,19 +404,23 @@ export default function PendaftaranScreen() {
         setSelectedPasien(pasien);
 
         setNoRM("");
+
         setTglLahir("");
+
         setModalPasienVisible(false);
       } else {
         setErrorMessage(
           json?.metadata?.message ||
-            "Nomor rekam medis atau tanggal lahir ada yang salah"
+            "Nomor rekam medis atau tanggal lahir ada yang salah",
         );
+
         setModalErrorVisible(true);
       }
     } catch (error) {
       console.log("Gagal cek pasien:", error);
 
       setErrorMessage("Gagal terhubung ke server. Silakan coba lagi.");
+
       setModalErrorVisible(true);
     } finally {
       setLoadingPasien(false);
@@ -305,12 +431,14 @@ export default function PendaftaranScreen() {
     const cleaned = text.replace(/\D/g, "").slice(0, 6);
 
     if (cleaned.length <= 2) return cleaned;
+
     if (cleaned.length <= 4)
       return `${cleaned.slice(0, 2)}.${cleaned.slice(2)}`;
 
     return `${cleaned.slice(0, 2)}.${cleaned.slice(2, 4)}.${cleaned.slice(
       4,
-      6
+
+      6,
     )}`;
   };
 
@@ -324,7 +452,8 @@ export default function PendaftaranScreen() {
 
     return `${cleaned.slice(0, 2)}-${cleaned.slice(2, 4)}-${cleaned.slice(
       4,
-      8
+
+      8,
     )}`;
   };
 
@@ -338,6 +467,7 @@ export default function PendaftaranScreen() {
 
   const daftarPasien = async () => {
     setLoadingDaftar(true);
+
     if (
       !selectedKlinik ||
       !selectedDokter ||
@@ -345,65 +475,118 @@ export default function PendaftaranScreen() {
       !selectedJamPraktek ||
       !selectedPasien
     ) {
+      setLoadingDaftar(false);
+
       setErrorMessage("Data pendaftaran belum lengkap");
+
       setModalErrorVisible(true);
+
       return;
     }
 
     try {
       const payload = {
         userid: googleId,
+
         sublayanan: selectedKlinik?.name,
+
         layanan: selectedKlinik?.category,
+
         tgl: selectedTanggal?.value,
+
         jampraktek: selectedJamPraktek?.prak,
+
         register: selectedPasien?.patientid,
+
         dokterid: selectedDokter?.id,
+
         ktp: null,
+
         buktitransfer: null,
+
         status: 0,
+
         norujukan: null,
-        upx: selectedPasien?.upx,
+
+        upx: selectedPenjamin.id,
       };
 
-      const response = await fetch(
-        "https://api.rsabojonegoro.com:5010/his/about/newregV2",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
+      const url = "https://api.rsabojonegoro.com:5010/his/about/newregV21";
+
+      console.log("URL PENDAFTARAN:", url);
+
+      console.log("PAYLOAD PENDAFTARAN:", JSON.stringify(payload));
+
+      const response = await fetch(url, {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+
+          Accept: "application/json",
+        },
+
+        body: JSON.stringify(payload),
+      });
+
+      const rawResponse = await response.text();
+
+      console.log("HTTP STATUS:", response.status);
+
+      console.log("RESPON SERVER:", rawResponse);
+
+      let json: any;
+
+      try {
+        json = JSON.parse(rawResponse);
+      } catch {
+        throw new Error(
+          `Server mengembalikan respons bukan JSON (HTTP ${response.status})`,
+        );
+      }
+
+      if (!response.ok || Number(json?.metadata?.code) !== 200) {
+        const pesan =
+          json?.metadata?.message ||
+          json?.message ||
+          json?.error ||
+          `Pendaftaran gagal (HTTP ${response.status})`;
+
+        throw new Error(pesan);
+      }
+
+      const regId = json?.response?.id;
+
+      if (!regId) {
+        throw new Error(
+          "Pendaftaran berhasil, tetapi ID registrasi tidak ditemukan",
+        );
+      }
+
+      const reportResponse = await fetch(
+        `https://api.rsabojonegoro.com:5010/his/about/newreg/regid?id=${regId}`,
       );
 
-      const json = await response.json();
-
-      if (json?.metadata?.code === 200) {
-        const regId = json?.response?.id;
-
-        const reportResponse = await fetch(
-          `https://api.rsabojonegoro.com:5010/his/about/newreg/regid?id=${regId}`
+      if (!reportResponse.ok) {
+        throw new Error(
+          `Pendaftaran berhasil disimpan, tetapi bukti pendaftaran gagal dimuat (HTTP ${reportResponse.status}). ID: ${regId}`,
         );
-
-        const reportJson = await reportResponse.json();
-
-        const bukti = reportJson?.response || reportJson;
-               
-        setBuktiDaftar(bukti);
-        
-        await simpanPasienKeHp(selectedPasien);
-        
-        setModalSuksesVisible(true);
-      } else {
-        setErrorMessage(
-          json?.metadata?.message || json?.message || "Pendaftaran gagal"
-        );
-        setModalErrorVisible(true);
       }
-    } catch (error) {
-      console.log("Gagal daftar:", error);
-      setErrorMessage("Gagal terhubung ke server pendaftaran");
+
+      const reportJson = await reportResponse.json();
+
+      setBuktiDaftar(reportJson?.response || reportJson);
+
+      await simpanPasienKeHp(selectedPasien);
+
+      setModalSuksesVisible(true);
+    } catch (error: any) {
+      console.log("ERROR PENDAFTARAN:", error);
+
+      setErrorMessage(
+        error?.message || "Gagal terhubung ke server pendaftaran",
+      );
+
       setModalErrorVisible(true);
     } finally {
       setLoadingDaftar(false);
@@ -418,6 +601,28 @@ export default function PendaftaranScreen() {
     }
   };
 
+  const getPenjamin = async () => {
+    try {
+      setLoadingPenjamin(true);
+
+      const response = await fetch(
+        "https://api.rsabojonegoro.com:5010/his/Upx",
+      );
+
+      if (!response.ok) {
+        throw new Error("Gagal mengambil daftar penjamin");
+      }
+
+      const json = await response.json();
+
+      setListPenjamin(Array.isArray(json) ? json : []);
+    } catch (error) {
+      console.log("Gagal ambil penjamin:", error);
+    } finally {
+      setLoadingPenjamin(false);
+    }
+  };
+
   useEffect(() => {
     if (params.ulang !== "1") return;
 
@@ -426,9 +631,13 @@ export default function PendaftaranScreen() {
         if (params.patientid && params.patientname) {
           setSelectedPasien({
             id: String(params.patientid),
+
             patientid: String(params.patientid),
+
             name: String(params.patientname),
+
             date: "",
+
             upx: Number(params.upx || 0),
           });
         }
@@ -436,10 +645,15 @@ export default function PendaftaranScreen() {
         if (params.klinik) {
           setSelectedKlinik({
             id: Number(params.clinicId || 0),
+
             name: String(params.klinik),
+
             category: String(params.layanan || ""),
+
             fotoOL: null,
+
             layID: 0,
+
             kdBPJS: null,
           });
         }
@@ -447,8 +661,11 @@ export default function PendaftaranScreen() {
         if (params.dokter) {
           const dokterSelected = {
             id: Number(params.dokterid || 0),
+
             dokter: String(params.dokter),
+
             spesialis: String(params.klinik || ""),
+
             sp: Number(params.clinicId || 0),
           };
 
@@ -472,20 +689,33 @@ export default function PendaftaranScreen() {
     return () => {};
   }, [
     params.ulang,
+
     params.patientid,
+
     params.patientname,
+
     params.upx,
+
     params.klinik,
+
     params.layanan,
+
     params.dokter,
+
     params.dokterid,
+
     params.clinicId,
+
     params.bukaTanggal,
   ]);
 
   useEffect(() => {
     getSpecialist();
+
+    getPenjamin();
+
     loadGoogleId();
+
     loadRiwayatPasien();
   }, []);
 
@@ -502,6 +732,7 @@ export default function PendaftaranScreen() {
         </TouchableOpacity>
 
         <Text style={styles.title}>Pendaftaran Rawat Jalan</Text>
+
         <Text style={styles.subtitle}>Untuk Pasien Umum dan Asuransi</Text>
       </View>
 
@@ -521,6 +752,7 @@ export default function PendaftaranScreen() {
             onPress={() => {
               if (!selectedKlinik) {
                 alert("Pilih spesialis terlebih dahulu");
+
                 return;
               }
 
@@ -548,10 +780,12 @@ export default function PendaftaranScreen() {
             onPress={() => {
               if (!selectedDokter || !selectedTanggal) {
                 alert("Pilih dokter dan tanggal terlebih dahulu");
+
                 return;
               }
 
               setModalJamVisible(true);
+
               getJadwalPraktek(selectedDokter.id, selectedTanggal.value);
             }}
           />
@@ -561,6 +795,13 @@ export default function PendaftaranScreen() {
             placeholder={selectedPasien?.name || "Cek data pasien"}
             icon="person-outline"
             onPress={() => setModalPasienVisible(true)}
+          />
+
+          <FormSelect
+            label="Penjamin / Asuransi"
+            placeholder={selectedPenjamin.pxrs}
+            icon="shield-checkmark-outline"
+            onPress={() => setModalPenjaminVisible(true)}
           />
 
           <TouchableOpacity
@@ -579,6 +820,7 @@ export default function PendaftaranScreen() {
       </View>
 
       {/*Modal Spesialis*/}
+
       <Modal visible={modalVisible} transparent animationType="fade">
         <TouchableOpacity
           style={styles.modalOverlay}
@@ -609,11 +851,15 @@ export default function PendaftaranScreen() {
                     style={styles.spesialisItem}
                     onPress={async () => {
                       setSelectedKlinik(item);
+
                       setSelectedDokter(null);
+
                       setSelectedTanggal(null);
+
                       setSelectedJamPraktek(null);
 
                       setModalVisible(false);
+
                       setModalDokterVisible(true);
 
                       await getDokterBySpesialis(item.id);
@@ -636,6 +882,7 @@ export default function PendaftaranScreen() {
 
                     <View style={{ flex: 1 }}>
                       <Text style={styles.spesialisText}>{item.name}</Text>
+
                       <Text style={styles.spesialisCategory}>
                         {item.category?.trim()}
                       </Text>
@@ -656,6 +903,7 @@ export default function PendaftaranScreen() {
       </Modal>
 
       {/*Modal Dokter*/}
+
       <Modal visible={modalDokterVisible} transparent animationType="fade">
         <TouchableOpacity
           style={styles.modalOverlay}
@@ -711,6 +959,7 @@ export default function PendaftaranScreen() {
 
                     <View style={{ flex: 1 }}>
                       <Text style={styles.spesialisText}>{item.dokter}</Text>
+
                       <Text style={styles.spesialisCategory}>
                         {item.spesialis}
                       </Text>
@@ -731,6 +980,7 @@ export default function PendaftaranScreen() {
       </Modal>
 
       {/*Modal Tgl*/}
+
       <Modal visible={modalTanggalVisible} transparent animationType="fade">
         <TouchableOpacity
           style={styles.modalOverlay}
@@ -752,10 +1002,12 @@ export default function PendaftaranScreen() {
                   style={styles.spesialisItem}
                   onPress={async () => {
                     setSelectedTanggal(item);
+
                     setModalTanggalVisible(false);
 
                     if (selectedDokter) {
                       setModalJamVisible(true);
+
                       await getJadwalPraktek(selectedDokter.id, item.value);
                     }
                   }}
@@ -780,6 +1032,7 @@ export default function PendaftaranScreen() {
       </Modal>
 
       {/*Modal JamPrak*/}
+
       <Modal visible={modalJamVisible} transparent animationType="fade">
         <TouchableOpacity
           style={styles.modalOverlay}
@@ -792,6 +1045,7 @@ export default function PendaftaranScreen() {
             onPress={(e) => e.stopPropagation()}
           >
             <Text style={styles.jamModalTitle}>Pilih Jam Praktek</Text>
+
             {loadingJam ? (
               <ActivityIndicator size="large" color="#0A7C86" />
             ) : (
@@ -810,10 +1064,10 @@ export default function PendaftaranScreen() {
                     item.status === 1
                       ? "Libur"
                       : item.status === 2
-                      ? "Penuh"
-                      : item.status === 3
-                      ? "Tutup"
-                      : "Masuk";
+                        ? "Penuh"
+                        : item.status === 3
+                          ? "Tutup"
+                          : "Masuk";
 
                   return (
                     <TouchableOpacity
@@ -834,6 +1088,7 @@ export default function PendaftaranScreen() {
                       }}
                     >
                       {/* KIRI */}
+
                       <View style={styles.jamLeft}>
                         <Ionicons
                           name="time-outline"
@@ -845,6 +1100,7 @@ export default function PendaftaranScreen() {
                       </View>
 
                       {/* KANAN */}
+
                       <View style={styles.jamRightInline}>
                         {item.status === 4 ? (
                           <>
@@ -866,8 +1122,8 @@ export default function PendaftaranScreen() {
                               item.status === 1
                                 ? styles.badgeLibur
                                 : item.status === 2
-                                ? styles.badgePenuh
-                                : styles.badgeTutup
+                                  ? styles.badgePenuh
+                                  : styles.badgeTutup
                             }
                           >
                             <Text style={styles.badgeText}>{statusText}</Text>
@@ -883,7 +1139,72 @@ export default function PendaftaranScreen() {
         </TouchableOpacity>
       </Modal>
 
+      {/*Modal UPx*/}
+
+      <Modal visible={modalPenjaminVisible} transparent animationType="fade">
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setModalPenjaminVisible(false)}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            style={styles.modalBox}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <Text style={styles.modalTitle}>Pilih Penjamin / Asuransi</Text>
+
+            {loadingPenjamin ? (
+              <ActivityIndicator size="large" color="#0A7C86" />
+            ) : (
+              <FlatList
+                data={listPenjamin}
+                keyExtractor={(item) => String(item.id)}
+                style={{ maxHeight: 430 }}
+                ListEmptyComponent={
+                  <Text style={styles.emptyText}>
+                    Daftar asuransi tidak tersedia
+                  </Text>
+                }
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.spesialisItem}
+                    onPress={() => {
+                      setSelectedPenjamin(item);
+
+                      setModalPenjaminVisible(false);
+                    }}
+                  >
+                    <Ionicons
+                      name={
+                        selectedPenjamin.id === item.id
+                          ? "radio-button-on"
+                          : "radio-button-off"
+                      }
+                      size={23}
+                      color="#0A7C86"
+                    />
+
+                    <Text style={[styles.spesialisText, { marginLeft: 14 }]}>
+                      {item.pxrs}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setModalPenjaminVisible(false)}
+            >
+              <Text style={styles.closeButtonText}>Tutup</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
       {/*Modal Pasien*/}
+
       <Modal visible={modalPasienVisible} transparent animationType="fade">
         <TouchableOpacity
           style={styles.modalOverlay}
@@ -896,6 +1217,7 @@ export default function PendaftaranScreen() {
             onPress={(e) => e.stopPropagation()}
           >
             <Text style={styles.inputLabel}>Nomor RM</Text>
+
             <TextInput
               style={styles.textInput}
               placeholder="Nomor RM yang sudah terdaftar"
@@ -907,6 +1229,7 @@ export default function PendaftaranScreen() {
             />
 
             <Text style={styles.inputLabel}>Tanggal Lahir</Text>
+
             <TextInput
               style={styles.textInput}
               placeholder="DD-MM-YYYY"
@@ -933,6 +1256,7 @@ export default function PendaftaranScreen() {
                 style={styles.pasienItem}
                 onPress={() => {
                   setSelectedPasien(item);
+
                   setModalPasienVisible(false);
                 }}
               >
@@ -946,6 +1270,7 @@ export default function PendaftaranScreen() {
       </Modal>
 
       {/*Modal daftar NoRM tidak sama TGL lahir*/}
+
       <Modal visible={modalErrorVisible} transparent animationType="fade">
         <TouchableOpacity
           style={styles.errorOverlay}
@@ -984,6 +1309,7 @@ export default function PendaftaranScreen() {
       </Modal>
 
       {/*Modal repon daftar*/}
+
       <Modal visible={modalSuksesVisible} transparent animationType="fade">
         <TouchableOpacity
           style={styles.modalOverlay}
@@ -1027,19 +1353,27 @@ export default function PendaftaranScreen() {
                 logoBackgroundColor="transparent"
               />
             </View>
+
             <InfoRow label="PIN" value={String(buktiDaftar?.idol || "-")} />
+
             <InfoRow
               label="No Antrean"
               value={String(buktiDaftar?.pxno || "-")}
             />
+
             <InfoRow
               label="Estimasi Dilayani"
               value={buktiDaftar?.estimasi?.slice(0, 5) || "-"}
             />
+
             <InfoRow label="No RM" value={selectedPasien?.patientid || "-"} />
+
             <InfoRow label="Dokter" value={selectedDokter?.dokter || "-"} />
+
             <InfoRow label="Pasien" value={selectedPasien?.name || "-"} />
+
             <InfoRow label="Tanggal" value={selectedTanggal?.label || "-"} />
+
             <InfoRow
               label="Jam praktek"
               value={selectedJamPraktek?.shift === "P" ? "Pagi" : "Sore"}
@@ -1063,13 +1397,19 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 
 function FormSelect({
   label,
+
   placeholder,
+
   icon,
+
   onPress,
 }: {
   label: string;
+
   placeholder: string;
+
   icon: any;
+
   onPress?: () => void;
 }) {
   return (
@@ -1083,6 +1423,7 @@ function FormSelect({
       >
         <View style={styles.inputLeft}>
           <Ionicons name={icon} size={20} color="#0A7C86" />
+
           <Text style={styles.placeholder}>{placeholder}</Text>
         </View>
 
@@ -1097,31 +1438,45 @@ const styles = StyleSheet.create({
 
   header: {
     backgroundColor: "#0A7C86",
+
     paddingTop: 38,
+
     paddingBottom: 10,
+
     alignItems: "center",
+
     justifyContent: "center",
+
     borderBottomLeftRadius: 24,
+
     borderBottomRightRadius: 24,
+
     elevation: 6,
   },
 
   backButton: {
     position: "absolute",
+
     left: 14,
+
     top: 40,
+
     zIndex: 10,
   },
 
   title: { color: "#fff", fontSize: 23, fontWeight: "800" },
+
   subtitle: { color: "#D9FFFF", fontSize: 14, marginTop: 4 },
 
   content: { padding: 16, marginTop: -8 },
 
   card: {
     backgroundColor: "#fff",
+
     borderRadius: 18,
+
     padding: 16,
+
     elevation: 4,
   },
 
@@ -1129,465 +1484,685 @@ const styles = StyleSheet.create({
 
   label: {
     fontSize: 13,
+
     color: "#566",
+
     marginBottom: 6,
+
     fontWeight: "700",
   },
 
   input: {
     borderWidth: 1,
+
     borderColor: "#D8E2E3",
+
     borderRadius: 12,
+
     height: 50,
+
     paddingHorizontal: 12,
+
     backgroundColor: "#FAFFFF",
+
     flexDirection: "row",
+
     alignItems: "center",
+
     justifyContent: "space-between",
   },
 
   inputLeft: {
     flexDirection: "row",
+
     alignItems: "center",
+
     flex: 1,
   },
 
   placeholder: {
     fontSize: 15,
+
     color: "#667",
+
     marginLeft: 10,
   },
 
   button: {
     marginTop: 8,
+
     backgroundColor: "#0A7C86",
+
     borderRadius: 14,
+
     paddingVertical: 14,
+
     alignItems: "center",
+
     elevation: 3,
   },
 
   buttonText: {
     color: "#fff",
+
     fontSize: 16,
+
     fontWeight: "800",
   },
 
   modalOverlay: {
     flex: 1,
+
     backgroundColor: "rgba(0,0,0,0.45)",
+
     alignItems: "center",
+
     justifyContent: "center",
+
     padding: 20,
   },
 
   modalBox: {
     width: "100%",
+
     backgroundColor: "#fff",
+
     borderRadius: 18,
+
     padding: 20,
+
     elevation: 8,
+
     maxHeight: "80%",
   },
 
   modalTitle: {
     fontSize: 20,
+
     fontWeight: "800",
+
     color: "#0A7C86",
+
     textAlign: "center",
   },
 
   modalSubtitle: {
     fontSize: 17,
+
     color: "#666",
+
     textAlign: "center",
+
     marginTop: 8,
+
     marginBottom: 20,
   },
 
   modalMenu: {
     flexDirection: "row",
+
     alignItems: "center",
+
     borderWidth: 1,
+
     borderColor: "#D8E2E3",
+
     borderRadius: 12,
+
     paddingVertical: 14,
+
     paddingHorizontal: 14,
+
     backgroundColor: "#FAFFFF",
   },
 
   modalMenuText: {
     flex: 1,
+
     marginLeft: 10,
+
     fontSize: 16,
+
     color: "#555",
+
     fontWeight: "700",
   },
 
   spesialisItem: {
     flexDirection: "row",
+
     alignItems: "center",
+
     paddingVertical: 12,
+
     borderBottomWidth: 1,
+
     borderBottomColor: "#E4E4E4",
   },
 
   iconCircle: {
     width: 44,
+
     height: 44,
+
     borderRadius: 22,
+
     backgroundColor: "#EFEFEF",
+
     alignItems: "center",
+
     justifyContent: "center",
+
     marginRight: 12,
   },
 
   iconImage: {
     width: 38,
+
     height: 38,
+
     borderRadius: 19,
+
     resizeMode: "contain",
   },
 
   spesialisText: {
     fontSize: 16,
+
     color: "#555",
+
     fontWeight: "700",
   },
 
   spesialisCategory: {
     fontSize: 12,
+
     color: "#888",
+
     marginTop: 2,
   },
 
   closeButton: {
     marginTop: 16,
+
     backgroundColor: "#0A7C86",
+
     paddingVertical: 13,
+
     borderRadius: 12,
+
     alignItems: "center",
   },
 
   closeButtonText: {
     color: "#fff",
+
     fontSize: 15,
+
     fontWeight: "800",
   },
 
   dokterImage: {
     width: 48,
+
     height: 48,
+
     borderRadius: 24,
+
     backgroundColor: "#EFEFEF",
+
     marginRight: 12,
   },
 
   emptyText: {
     textAlign: "center",
+
     color: "#777",
+
     fontSize: 15,
+
     marginVertical: 24,
   },
 
   closeJamWrapper: {
     width: "100%",
+
     alignItems: "flex-end",
+
     marginBottom: 10,
   },
 
   closeJamButton: {
     backgroundColor: "#F3C15C",
+
     paddingHorizontal: 18,
+
     paddingVertical: 7,
+
     borderRadius: 20,
   },
 
   closeJamText: {
     fontSize: 16,
+
     color: "#6A4A00",
+
     fontWeight: "700",
   },
 
   jamItem: {
     flexDirection: "row",
+
     alignItems: "center",
+
     justifyContent: "space-between",
+
     paddingVertical: 14,
+
     borderBottomWidth: 1,
+
     borderBottomColor: "#ECECEC",
   },
 
   modalJamBox: {
     width: "90%",
+
     backgroundColor: "#fff",
+
     borderRadius: 18,
+
     paddingTop: 18,
+
     paddingBottom: 8,
+
     paddingHorizontal: 16,
+
     elevation: 10,
   },
 
   jamModalTitle: {
     fontSize: 20,
+
     fontWeight: "800",
+
     color: "#0A7C86",
+
     textAlign: "center",
+
     marginBottom: 10,
   },
 
   jamLeft: {
     flexDirection: "row",
+
     alignItems: "center",
+
     flex: 1,
   },
 
   jamText: {
     fontSize: 18,
+
     color: "#555",
+
     marginLeft: 10,
+
     fontWeight: "700",
   },
 
   badgeText: {
     color: "#fff",
+
     fontSize: 13,
+
     fontWeight: "700",
   },
 
   badgeMasuk: {
     backgroundColor: "#2E7D32",
+
     borderRadius: 14,
+
     paddingHorizontal: 13,
+
     paddingVertical: 5,
   },
 
   badgeLibur: {
     backgroundColor: "#607D8B",
+
     borderRadius: 14,
+
     paddingHorizontal: 13,
+
     paddingVertical: 5,
   },
 
   badgePenuh: {
     backgroundColor: "#C62828",
+
     borderRadius: 14,
+
     paddingHorizontal: 13,
+
     paddingVertical: 5,
   },
 
   badgeTutup: {
     backgroundColor: "#D4A017",
+
     borderRadius: 14,
+
     paddingHorizontal: 13,
+
     paddingVertical: 5,
   },
 
   badgeJumlah: {
     backgroundColor: "#0A7C86",
+
     borderRadius: 14,
+
     paddingHorizontal: 10,
+
     paddingVertical: 5,
+
     marginRight: 8,
+
     minWidth: 82,
+
     alignItems: "center",
   },
 
   badgeSisa: {
     backgroundColor: "#C24A00",
+
     borderRadius: 14,
+
     paddingHorizontal: 10,
+
     paddingVertical: 5,
+
     minWidth: 82,
+
     alignItems: "center",
   },
 
   jamRowSingle: {
     flexDirection: "row",
+
     alignItems: "center",
+
     justifyContent: "space-between",
+
     paddingVertical: 14,
+
     borderBottomWidth: 1,
+
     borderBottomColor: "#ECECEC",
   },
 
   jamRightInline: {
     flexDirection: "row",
+
     alignItems: "center",
   },
 
   inputLabel: {
     fontSize: 15,
+
     color: "#666",
+
     marginBottom: 6,
+
     fontWeight: "600",
   },
 
   textInput: {
     borderWidth: 1,
+
     borderColor: "#D0D8D8",
+
     borderRadius: 8,
+
     height: 48,
+
     paddingHorizontal: 14,
+
     fontSize: 16,
+
     marginBottom: 12,
+
     color: "#333",
   },
 
   searchButton: {
     backgroundColor: "#F2A000",
+
     borderRadius: 8,
+
     paddingVertical: 13,
+
     alignItems: "center",
+
     marginBottom: 16,
   },
 
   searchButtonText: {
     color: "#fff",
+
     fontSize: 16,
+
     fontWeight: "800",
   },
 
   pasienItem: {
     borderWidth: 1,
+
     borderColor: "#0A7C86",
+
     borderRadius: 8,
+
     paddingVertical: 12,
+
     paddingHorizontal: 12,
+
     marginBottom: 10,
   },
 
   pasienText: {
     color: "#0A7C86",
+
     fontSize: 16,
+
     fontWeight: "600",
   },
 
   errorOverlay: {
     flex: 1,
+
     backgroundColor: "rgba(0,0,0,0.45)",
+
     justifyContent: "center",
+
     alignItems: "center",
+
     padding: 24,
   },
 
   errorBox: {
     width: "88%",
+
     backgroundColor: "#fff",
+
     borderRadius: 18,
+
     paddingVertical: 28,
+
     paddingHorizontal: 24,
+
     alignItems: "center",
+
     elevation: 10,
   },
 
   errorIconCircle: {
     width: 96,
+
     height: 96,
+
     borderRadius: 48,
+
     backgroundColor: "#F2A500",
+
     justifyContent: "center",
+
     alignItems: "center",
+
     marginBottom: 22,
   },
 
   errorIcon: {
     color: "#fff",
+
     fontSize: 56,
+
     fontWeight: "900",
   },
 
   errorText: {
     fontSize: 20,
+
     color: "#666",
+
     textAlign: "center",
+
     lineHeight: 28,
+
     marginBottom: 18,
   },
 
   errorLink: {
     fontSize: 18,
+
     color: "#0A7C86",
+
     textAlign: "center",
+
     fontWeight: "700",
+
     marginBottom: 24,
   },
 
   errorButton: {
     backgroundColor: "#0A7C86",
+
     paddingHorizontal: 32,
+
     paddingVertical: 12,
+
     borderRadius: 14,
   },
 
   errorButtonText: {
     color: "#fff",
+
     fontSize: 17,
+
     fontWeight: "700",
   },
 
   buktiBox: {
     width: "92%",
+
     backgroundColor: "#fff",
+
     borderRadius: 10,
+
     padding: 18,
+
     elevation: 10,
   },
 
   buktiHeader: {
     borderBottomWidth: 1,
+
     borderBottomColor: "#0A7C86",
+
     paddingBottom: 10,
+
     marginBottom: 14,
   },
 
   buktiTitle: {
     fontSize: 20,
+
     color: "#555",
+
     fontWeight: "700",
   },
 
   batalButton: {
     position: "absolute",
+
     right: 0,
+
     top: -5,
+
     backgroundColor: "#A61D2B",
+
     paddingHorizontal: 18,
+
     paddingVertical: 9,
+
     borderRadius: 8,
   },
 
   batalButtonText: {
     color: "#fff",
+
     fontSize: 16,
+
     fontWeight: "700",
   },
 
   qrWrapper: {
     alignItems: "center",
+
     marginVertical: 18,
   },
 
   infoRow: {
     flexDirection: "row",
+
     justifyContent: "space-between",
+
     alignItems: "center",
+
     borderBottomWidth: 1,
+
     borderBottomColor: "#DDD",
+
     paddingVertical: 12,
   },
 
   infoLabel: {
     fontSize: 16,
+
     color: "#111",
+
     fontWeight: "800",
   },
 
   infoValue: {
     fontSize: 16,
+
     color: "#111",
+
     flex: 1,
+
     textAlign: "right",
+
     marginLeft: 20,
   },
 });

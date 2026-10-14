@@ -67,7 +67,7 @@ export default function PendaftaranRM() {
       const googleId = await SecureStore.getItemAsync("google_id");
 
       const res = await fetch(
-        `https://api.rsabojonegoro.com:5010/his/reg/regpxol/userid?userid=${googleId}`
+        `https://api.rsabojonegoro.com:5010/his/reg/regpxol/userid?userid=${googleId}`,
       );
 
       const json = await res.json();
@@ -112,7 +112,7 @@ export default function PendaftaranRM() {
 
   const formFields: FormField[] = [
     { key: "nik", label: "NIK", placeholder: "Masukkan NIK" },
-    { key: "nojkn", label: "Nomor JKN", placeholder: "Masukkan nomor JKN" },
+    //  { key: "nojkn", label: "Nomor JKN", placeholder: "Masukkan nomor JKN" },
     { key: "nama", label: "Nama", placeholder: "Masukkan nama lengkap" },
     { key: "kecamatan", label: "Kecamatan", placeholder: "Pilih kecamatan" },
     { key: "kelurahan", label: "Kelurahan", placeholder: "Pilih kelurahan" },
@@ -184,7 +184,8 @@ export default function PendaftaranRM() {
       const payload = {
         nama: form.nama,
         nik: form.nik,
-        nojkn: form.nojkn,
+        //   nojkn: form.nojkn,
+        nojkn: "",
         addr: form.alamat,
         kel: form.kelurahan,
         kec: form.kecamatan,
@@ -216,10 +217,10 @@ export default function PendaftaranRM() {
         return;
       }
 
-      if (!/^\d+$/.test(form.nojkn)) {
+      /*  if (!/^\d+$/.test(form.nojkn)) {
         alert("JKN harus angka");
         return;
-      }
+      } */
 
       const res = await fetch(
         "https://api.rsabojonegoro.com:5010/his/reg/regpxol",
@@ -229,7 +230,7 @@ export default function PendaftaranRM() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       const text = await res.text();
@@ -297,7 +298,7 @@ export default function PendaftaranRM() {
   const loadKecamatan = async () => {
     try {
       const res = await fetch(
-        "https://api.rsabojonegoro.com:5010/his/reg/camat"
+        "https://api.rsabojonegoro.com:5010/his/reg/camat",
       );
       const json = await res.json();
       setKecamatanList(json?._embedded?.kecamatans || []);
@@ -309,7 +310,7 @@ export default function PendaftaranRM() {
   const loadKelurahan = async (camatId: number) => {
     try {
       const res = await fetch(
-        `https://api.rsabojonegoro.com:5010/his/reg/lurah?camatid=${camatId}`
+        `https://api.rsabojonegoro.com:5010/his/reg/lurah?camatid=${camatId}`,
       );
       const json = await res.json();
       setKelurahanList(json?._embedded?.kelurahans || []);
@@ -485,12 +486,12 @@ export default function PendaftaranRM() {
                 {formatTanggal(selected.tlahir)}
               </Text>
             </View>
-
+            {/*}
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>JKN</Text>
               <Text style={styles.detailValue}>{selected.nojkn || "-"}</Text>
             </View>
-
+      */}
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>NIK</Text>
               <Text style={styles.detailValue}>{selected.nik || "-"}</Text>
@@ -549,7 +550,7 @@ export default function PendaftaranRM() {
                   onContentSizeChange={(_, h) => setContentHeight(h)}
                   onScroll={Animated.event(
                     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                    { useNativeDriver: false }
+                    { useNativeDriver: false },
                   )}
                   scrollEventThrottle={16}
                   renderItem={({ item }) => {
@@ -664,10 +665,10 @@ export default function PendaftaranRM() {
                                 ? form.status === 1
                                   ? "Kawin"
                                   : form.status === 2
-                                  ? "Belum Kawin"
-                                  : form.status === 3
-                                  ? "Janda"
-                                  : "Duda"
+                                    ? "Belum Kawin"
+                                    : form.status === 3
+                                      ? "Janda"
+                                      : "Duda"
                                 : item.placeholder}
                             </Text>
                           </TouchableOpacity>
@@ -738,7 +739,7 @@ export default function PendaftaranRM() {
                             >
                               {form.pendidikan
                                 ? pendidikanList.find(
-                                    (x) => x.id === form.pendidikan
+                                    (x) => x.id === form.pendidikan,
                                   )?.edu || item.placeholder
                                 : item.placeholder}
                             </Text>
@@ -772,8 +773,8 @@ export default function PendaftaranRM() {
                           }
                           onSubmitEditing={() => {
                             if (item.key === "nik") {
-                              inputRefs.current["nojkn"]?.focus();
-                            } else if (item.key === "nojkn") {
+                              //      inputRefs.current["nojkn"]?.focus();
+                              //    } else if (item.key === "nojkn") {
                               inputRefs.current["nama"]?.focus();
                             } else if (item.key === "nama") {
                               setShowKecamatan(true);
@@ -803,12 +804,12 @@ export default function PendaftaranRM() {
                             item.key === "nik"
                               ? 16
                               : item.key === "nojkn"
-                              ? 13
-                              : item.key === "tlahir"
-                              ? 10
-                              : item.key === "telepon"
-                              ? 15
-                              : undefined
+                                ? 13
+                                : item.key === "tlahir"
+                                  ? 10
+                                  : item.key === "telepon"
+                                    ? 15
+                                    : undefined
                           }
                           onChangeText={(text) => {
                             let value = text;
@@ -827,11 +828,11 @@ export default function PendaftaranRM() {
                               if (value.length >= 5) {
                                 value = `${value.slice(0, 2)}-${value.slice(
                                   2,
-                                  4
+                                  4,
                                 )}-${value.slice(4)}`;
                               } else if (value.length >= 3) {
                                 value = `${value.slice(0, 2)}-${value.slice(
-                                  2
+                                  2,
                                 )}`;
                               }
                             }
@@ -899,7 +900,7 @@ export default function PendaftaranRM() {
                             },
                           },
                         ],
-                        { useNativeDriver: false }
+                        { useNativeDriver: false },
                       )}
                     >
                       {kecamatanList.map((item) => (
@@ -978,7 +979,7 @@ export default function PendaftaranRM() {
                             },
                           },
                         ],
-                        { useNativeDriver: false }
+                        { useNativeDriver: false },
                       )}
                     >
                       {kelurahanList.map((item) => (
@@ -1244,7 +1245,7 @@ export default function PendaftaranRM() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
-       {/*  Modal Sukses daftar RM */}
+      {/*  Modal Sukses daftar RM */}
       <Modal visible={showSuccess} transparent animationType="fade">
         <View style={styles.successOverlay}>
           <View style={styles.successBox}>
